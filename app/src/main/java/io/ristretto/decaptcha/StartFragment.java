@@ -32,7 +32,7 @@ public class StartFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static StartFragment newInstance(String url) {
+    public static StartFragment newInstance(String url, String errorMessage) {
         StartFragment fragment = new StartFragment();
         Bundle args = new Bundle();
         args.putString(ARG_DEFAULT_URL, url);

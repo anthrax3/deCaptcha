@@ -3,6 +3,7 @@ package io.ristretto.decaptcha;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -50,7 +51,7 @@ public class SolverActivity extends AppCompatActivity
                 }
             }
         });
-        showStartFragment("https://patrickhlauke.github.io/recaptcha/");
+        showStartFragment("https://4chan.org");
     }
 
     @Override
@@ -88,13 +89,36 @@ public class SolverActivity extends AppCompatActivity
         setFloatingButtonIsVisible(false);
     }
 
-    private void showStartFragment(String defaultUrl) {
+
+    /**
+     * Get the active fragment if it is of the expected class.
+     * @param expectedClass the expected class.
+     * @param <T> The fragment type
+     * @return the casted fragment
+     */
+    @Nullable
+    @Contract("null -> fail")
+    private <T extends Fragment> T getActiveFragment(Class<T> expectedClass) {
+        if(expectedClass == null) throw new NullPointerException("expectedClass is null");
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment fragment = fragmentManager.findFragmentById(R.id.fragment);
-        if(fragment == null || !(fragment instanceof StartFragment)) {
+        if(fragment == null || ! expectedClass.isAssignableFrom(fragment.getClass())) {
+            return null;
+        } else {
+            return expectedClass.cast(fragment);
+        }
+    }
+
+    private void showStartFragment(String defaultUrl) {
+        showStartFragment(defaultUrl, null);
+    }
+
+    private void showStartFragment(String defaultUrl, @Nullable String errorMessage) {
+        Fragment fragment = getActiveFragment(StartFragment.class);
+        if(fragment == null) {
             Log.d(TAG, "Creating start fragment with default url: " + defaultUrl);
-            fragment = StartFragment.newInstance(defaultUrl);
-            fragmentManager.beginTransaction()
+            fragment = StartFragment.newInstance(defaultUrl, errorMessage);
+            getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment, fragment)
                     .commit();
         } else {
@@ -107,15 +131,12 @@ public class SolverActivity extends AppCompatActivity
     private void solveUrl(final String url) {
         if(url == null) throw new NullPointerException("url is null");
         if(url.isEmpty()) throw new IllegalArgumentException("url is empty");
-        Log.d(TAG, "Solving url: " + url);
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment fragment = fragmentManager.findFragmentById(R.id.fragment);
-        if(fragment == null || !(fragment instanceof CaptchaSolverFragment)) {
-            Log.d(TAG, "Replacing fragment. Old: " + fragment);
+        Fragment fragment = getActiveFragment(CaptchaSolverFragment.class);
+        if(fragment == null) {
             CaptchaSolverFragment captchaSolverFragment;
             captchaSolverFragment = CaptchaSolverFragment.newInstance(ReCaptchaSolverFragment.class, url);
             captchaSolverFragment.addLoadingProgressListener(mCaptchaLoadingProgressListener);
-            fragmentManager.beginTransaction()
+            getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment, captchaSolverFragment)
                     .addToBackStack(null)
                     .commit();
@@ -158,14 +179,11 @@ public class SolverActivity extends AppCompatActivity
     }
 
     @Override
-    public void onException(Throwable throwable) {
+    public void onFailure(@NonNull String message, @Nullable Throwable throwable) {
         hideProgressBar();
+        showStartFragment(startingPoint.toString(), message);
     }
 
-    @Override
-    public void onFailure() {
-        hideProgressBar();
-    }
 
     private @Nullable ProgressBar getProgressBar() {
         return (ProgressBar) findViewById(R.id.progressBar);
@@ -180,7 +198,7 @@ public class SolverActivity extends AppCompatActivity
 
     private class CaptchaLoadingProgressListener implements CaptchaSolverFragment.ProgressListener {
         @Override
-        public void onIsIndeterminate(CaptchaSolverFragment fragment) {
+        public void onIsIndeterminate(@NonNull CaptchaSolverFragment fragment) {
             ProgressBar progressBar = getProgressBar();
             if(progressBar == null) return;
             progressBar.setIndeterminate(true);
@@ -188,7 +206,7 @@ public class SolverActivity extends AppCompatActivity
         }
 
         @Override
-        public void onProgress(CaptchaSolverFragment fragment, int progress, int max) {
+        public void onProgress(@NonNull CaptchaSolverFragment fragment, int progress, int max) {
             ProgressBar progressBar = getProgressBar();
             if(progressBar == null) return;
             progressBar.setMax(max);
@@ -198,12 +216,12 @@ public class SolverActivity extends AppCompatActivity
         }
 
         @Override
-        public void onDone(CaptchaSolverFragment fragment) {
+        public void onDone(@NonNull CaptchaSolverFragment fragment) {
             hideProgressBar();
         }
 
         @Override
-        public void onAbort(CaptchaSolverFragment fragment) {
+        public void onAbort(@NonNull CaptchaSolverFragment fragment) {
             hideProgressBar();
         }
     }

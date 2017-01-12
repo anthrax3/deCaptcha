@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function dataCallback(string) {
+    callbackObject.dataCallback(string);
+}
+</script>
+<script src="https://www.google.com/recaptcha/api.js"></script>
+</head>
+<body style="background:#212121">
+<form id="captchaform">
+    <div class="g-recaptcha" data-sitekey="%1$s" data-callback="dataCallback"></div>
+</form>
+</body>
+</html>

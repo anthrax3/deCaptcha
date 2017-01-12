@@ -15,9 +15,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <WebView
+    <io.ristretto.decaptcha.solver.ui.MyWebView
         android:id="@+id/webview"
         android:layout_below="@id/url"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/solver_webview_height" />
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible"/>
 </RelativeLayout>
