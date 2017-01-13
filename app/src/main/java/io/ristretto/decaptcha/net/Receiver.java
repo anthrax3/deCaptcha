@@ -4,10 +4,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-
 import java.io.IOException;
-
-import io.ristretto.decaptcha.data.Captcha;
 
 /**
  *

@@ -162,8 +162,6 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
     protected void onCaptchaReceived(@NonNull I captcha) {
         notifyLoadingIsDone();
     }
-
-
     
 
 

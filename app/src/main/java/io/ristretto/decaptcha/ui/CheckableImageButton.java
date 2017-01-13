@@ -1,14 +1,12 @@
 package io.ristretto.decaptcha.ui;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.support.v4.view.AccessibilityDelegateCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.support.v7.widget.AppCompatImageButton;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Checkable;

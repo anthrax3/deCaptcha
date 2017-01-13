@@ -6,8 +6,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.util.SparseBooleanArray;
-import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,8 +25,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import io.ristretto.decaptcha.R;
 import io.ristretto.decaptcha.data.CloudFlareReCaptcha;
@@ -46,7 +42,6 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
 
     private static final String TAG = "CFSolverFragment";
     private CFCaptchaAdapter mAdapter;
-    private boolean[] mAnswers = null;
 
     private static final String NAME_REASON="reason";
     private static final String NAME_CHALLENGE_ID = "c";
@@ -54,6 +49,8 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
 
     private static final String REASON_ANOTHER_CHALLENGE = "r";
     private static final String REASON_AUDIO = "a";
+
+    public static final int LOADING_STEPS = 4;
 
     public CloudFlareSolverFragment() {
     }
@@ -118,6 +115,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         return result;
     }
 
+
     private void loadTaskFromIFrame(File cacheDir, Document iframe, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
         Element label = iframe.select("label[for=response]").first();
         String task = "???";
@@ -141,11 +139,11 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         }
         String challengeId = getChallengeId(form);
         File payload = loadPayload(challengeId, cacheDir, captcha, downloader);
-        notifyLoadingProgress(3,4);
+        notifyLoadingProgress(3,LOADING_STEPS * 100);
         ArrayList<Bitmap> images = splitPayloadImage(payload, numberOfAnswers);
         Challenge challenge = new Challenge(challengeId, task, numberOfAnswers, images);
         captcha.setChallenge(challenge);
-        notifyLoadingProgress(4,4);
+        notifyLoadingProgress(4,LOADING_STEPS * 100);
     }
 
     private static File loadPayload(String challengeId, File cacheDir, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
@@ -168,7 +166,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         System.err.println(document.html());
 
 
-        notifyLoadingProgress(1,4);
+        notifyLoadingProgress(1,LOADING_STEPS * 100);
 
         Elements captchaContainers = document.getElementsByAttribute("data-stoken");
         String siteKey = null;
@@ -202,7 +200,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         }
 
         document = Jsoup.parse(result.getInputStream(), result.getCharset(), fallbackUrl);
-        notifyLoadingProgress(2,4);
+        notifyLoadingProgress(2,LOADING_STEPS * 100);
 
         loadTaskFromIFrame(cacheDir, document, reCaptcha, downloader);
         return reCaptcha;
@@ -217,7 +215,6 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
             return;
         }
         Challenge challenge = captcha.getChallenge();
-        mAnswers = new boolean[challenge.getNumberOfAnswers()];
         mAdapter.setBitmapy(challenge.getPayloadImages());
     }
 

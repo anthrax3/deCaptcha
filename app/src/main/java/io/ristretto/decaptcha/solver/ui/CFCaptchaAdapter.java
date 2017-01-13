@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import io.ristretto.decaptcha.R;
-import io.ristretto.decaptcha.data.Captcha;
 
 /**
  * Created by coffeemakr on 13.01.17.
