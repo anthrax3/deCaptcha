@@ -1,20 +1,17 @@
 package io.ristretto.decaptcha.solver.ui;
 
-import android.annotation.TargetApi;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.renderscript.ScriptGroup;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -33,10 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.text.Normalizer;
 import java.util.Formatter;
 
-import info.guardianproject.netcipher.NetCipher;
 import io.ristretto.decaptcha.R;
 import io.ristretto.decaptcha.data.ReCaptcha;
 import io.ristretto.decaptcha.net.Downloader;
@@ -49,6 +44,7 @@ import static io.ristretto.decaptcha.solver.Helper.PROTOCOLS_HTTP_AND_HTTPS;
  * A placeholder fragment containing a simple view.
  */
 public class ReCaptchaSolverFragment extends CaptchaSolverFragment<ReCaptcha> {
+
 
     private static final String TAG = "ReCaptchaSolverFragment";
     private WebView mWebView;
@@ -102,7 +98,7 @@ public class ReCaptchaSolverFragment extends CaptchaSolverFragment<ReCaptcha> {
     }
 
     @Override
-    protected ReCaptcha receiverCaptcha(final @NonNull File cacheDir, final @NonNull Downloader downloader, final @NonNull Uri uri) throws IOException {
+    protected ReCaptcha receiveCaptcha(final @NonNull File cacheDir, final @NonNull Downloader downloader, final @NonNull Uri uri) throws IOException {
         URL url = Helper.uriToURL(uri, PROTOCOLS_HTTP_AND_HTTPS);
         Document document = null;
         Downloader.Result result = downloader.download(url);

@@ -6,7 +6,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.util.SparseBooleanArray;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -22,6 +27,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.ristretto.decaptcha.R;
 import io.ristretto.decaptcha.data.CloudFlareReCaptcha;
@@ -39,7 +46,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
 
     private static final String TAG = "CFSolverFragment";
     private CFCaptchaAdapter mAdapter;
-
+    private boolean[] mAnswers = null;
 
     private static final String NAME_REASON="reason";
     private static final String NAME_CHALLENGE_ID = "c";
@@ -64,9 +71,12 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
                 Log.d(TAG, "onItemClick: parent=" + parent + " view:" + view + " POSITION:" + position + " id:" + id);
                 CFCaptchaAdapter.CaptchaTile tile = (CFCaptchaAdapter.CaptchaTile) gridView.getItemAtPosition(position);
                 tile.toggle();
+
                 mAdapter.notifyDataSetChanged();
             }
         });
+
+        setHasOptionsMenu(true);
         return view;
     }
 
@@ -77,7 +87,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
 
 
     private static String getChallengeId(Element form) throws IOException {
-        return form.getElementsByAttributeValue("name", "c").first().attr("value");
+        return form.getElementsByAttributeValue("name", NAME_CHALLENGE_ID).first().attr("value");
     }
 
 
@@ -108,7 +118,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         return result;
     }
 
-    private static void loadTaskFromIFrame(File cacheDir, Document iframe, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
+    private void loadTaskFromIFrame(File cacheDir, Document iframe, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
         Element label = iframe.select("label[for=response]").first();
         String task = "???";
         if(label == null) {
@@ -131,9 +141,11 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         }
         String challengeId = getChallengeId(form);
         File payload = loadPayload(challengeId, cacheDir, captcha, downloader);
+        notifyLoadingProgress(3,4);
         ArrayList<Bitmap> images = splitPayloadImage(payload, numberOfAnswers);
         Challenge challenge = new Challenge(challengeId, task, numberOfAnswers, images);
         captcha.setChallenge(challenge);
+        notifyLoadingProgress(4,4);
     }
 
     private static File loadPayload(String challengeId, File cacheDir, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
@@ -145,7 +157,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
     }
 
     @Override
-    protected CloudFlareReCaptcha receiverCaptcha(final @NonNull File cacheDir, final @NonNull Downloader downloader, final @NonNull Uri uri) throws IOException {
+    protected CloudFlareReCaptcha receiveCaptcha(final @NonNull File cacheDir, final @NonNull Downloader downloader, final @NonNull Uri uri) throws IOException {
         URL url = Helper.uriToURL(uri, PROTOCOLS_HTTP_AND_HTTPS);
 
         Downloader.Result result = downloader.download(url);
@@ -155,6 +167,8 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         Log.d(TAG, "HTTP code: " + result.getStatusCode());
         System.err.println(document.html());
 
+
+        notifyLoadingProgress(1,4);
 
         Elements captchaContainers = document.getElementsByAttribute("data-stoken");
         String siteKey = null;
@@ -188,6 +202,8 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         }
 
         document = Jsoup.parse(result.getInputStream(), result.getCharset(), fallbackUrl);
+        notifyLoadingProgress(2,4);
+
         loadTaskFromIFrame(cacheDir, document, reCaptcha, downloader);
         return reCaptcha;
     }
@@ -201,6 +217,30 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
             return;
         }
         Challenge challenge = captcha.getChallenge();
+        mAnswers = new boolean[challenge.getNumberOfAnswers()];
         mAdapter.setBitmapy(challenge.getPayloadImages());
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.reload_captcha:
+                // TODO
+                Log.d(TAG, "Reload request");
+                break;
+            case R.id.captcha_audio:
+                // TODO
+                Log.d(TAG, "Audio requested");
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_cloudflare_solver, menu);
     }
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="@string/new_captcha"
+        android:showAsAction="ifRoom"
+        android:id="@+id/reload_captcha"
+        android:icon="@drawable/ic_action_redo" />
+    <item android:title="@string/audio_captcha"
+        android:id="@+id/captcha_audio"
+        android:icon="@drawable/ic_action_listen"
+        android:checkable="true"
+        android:showAsAction="ifRoom" />
+</menu>

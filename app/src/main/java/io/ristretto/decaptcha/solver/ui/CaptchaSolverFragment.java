@@ -104,7 +104,7 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
                     I captcha = null;
                     try {
                         Activity activity = getActivity();
-                        captcha = receiverCaptcha(activity.getCacheDir(), new NetCipherDownloader(), uri);
+                        captcha = receiveCaptcha(activity.getCacheDir(), new NetCipherDownloader(), uri);
                         onCaptchaReceivedAsync(captcha);
                     } catch (IOException e) {
                         Log.e(TAG, "Error while receiving ", e);
@@ -138,9 +138,9 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
         isReadyForCaptcha = false;
     }
 
-    protected abstract I receiverCaptcha(@NonNull File cacheDir,
-                                         @NonNull Downloader downloader,
-                                         @NonNull Uri uri)
+    protected abstract I receiveCaptcha(@NonNull File cacheDir,
+                                        @NonNull Downloader downloader,
+                                        @NonNull Uri uri)
             throws IOException;
 
     private void onCaptchaReceivedAsync(final I captcha) {
@@ -157,13 +157,15 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
                 }
             }
         });
-
     }
 
-    @SuppressWarnings("unused")
     protected void onCaptchaReceived(@NonNull I captcha) {
         notifyLoadingIsDone();
     }
+
+
+    
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
