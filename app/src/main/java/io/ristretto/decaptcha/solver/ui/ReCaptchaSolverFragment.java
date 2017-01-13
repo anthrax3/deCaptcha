@@ -29,6 +29,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -101,7 +102,7 @@ public class ReCaptchaSolverFragment extends CaptchaSolverFragment<ReCaptcha> {
     }
 
     @Override
-    protected ReCaptcha receiverCaptcha(final @NonNull Downloader downloader, final @NonNull Uri uri) throws IOException {
+    protected ReCaptcha receiverCaptcha(final @NonNull File cacheDir, final @NonNull Downloader downloader, final @NonNull Uri uri) throws IOException {
         URL url = Helper.uriToURL(uri, PROTOCOLS_HTTP_AND_HTTPS);
         Document document = null;
         Downloader.Result result = downloader.download(url);
@@ -182,6 +183,8 @@ public class ReCaptchaSolverFragment extends CaptchaSolverFragment<ReCaptcha> {
         webview.loadDataWithBaseURL(captcha.getUrl(), content, "text/html",
                 "utf-8", captcha.getUrl());
     }
+
+
 
 
     @Override

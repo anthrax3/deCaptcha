@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<io.ristretto.decaptcha.ui.SquaredRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/captcha_tile"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/imageOverlayBackground">
+        <CheckBox
+            android:id="@+id/captcha_checkable"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:clickable="false"
+            android:focusable="false"
+            android:duplicateParentState="false"
+            android:checked="false"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+    </RelativeLayout>
+
+
+
+</io.ristretto.decaptcha.ui.SquaredRelativeLayout>

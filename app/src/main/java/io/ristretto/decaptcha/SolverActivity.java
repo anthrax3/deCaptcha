@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Contract;
 import java.util.Map;
 
 import io.ristretto.decaptcha.solver.ui.CaptchaSolverFragment;
+import io.ristretto.decaptcha.solver.ui.CloudFlareSolverFragment;
 import io.ristretto.decaptcha.solver.ui.ReCaptchaSolverFragment;
 
 public class SolverActivity extends AppCompatActivity
@@ -134,7 +135,7 @@ public class SolverActivity extends AppCompatActivity
         Fragment fragment = getActiveFragment(CaptchaSolverFragment.class);
         if(fragment == null) {
             CaptchaSolverFragment captchaSolverFragment;
-            captchaSolverFragment = CaptchaSolverFragment.newInstance(ReCaptchaSolverFragment.class, url);
+            captchaSolverFragment = CaptchaSolverFragment.newInstance(CloudFlareSolverFragment.class, url);
             captchaSolverFragment.addLoadingProgressListener(mCaptchaLoadingProgressListener);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment, captchaSolverFragment)

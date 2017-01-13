@@ -1,5 +1,6 @@
 package io.ristretto.decaptcha.solver.ui;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -19,12 +21,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import io.ristretto.decaptcha.data.Captcha;
+import io.ristretto.decaptcha.data.CaptchaImpl;
 import io.ristretto.decaptcha.net.Downloader;
 import io.ristretto.decaptcha.net.NetCipherDownloader;
 
 
-public abstract class CaptchaSolverFragment<I extends Captcha> extends Fragment{
+public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragment{
 
     private static final String KEY_URL = "url";
     private static final String TAG = "CaptchaSolverFragment";
@@ -101,7 +103,8 @@ public abstract class CaptchaSolverFragment<I extends Captcha> extends Fragment{
                 public void run() {
                     I captcha = null;
                     try {
-                        captcha = receiverCaptcha(new NetCipherDownloader(), uri);
+                        Activity activity = getActivity();
+                        captcha = receiverCaptcha(activity.getCacheDir(), new NetCipherDownloader(), uri);
                         onCaptchaReceivedAsync(captcha);
                     } catch (IOException e) {
                         Log.e(TAG, "Error while receiving ", e);
@@ -135,7 +138,10 @@ public abstract class CaptchaSolverFragment<I extends Captcha> extends Fragment{
         isReadyForCaptcha = false;
     }
 
-    protected abstract I receiverCaptcha(@NonNull Downloader downloader, @NonNull Uri uri) throws IOException;
+    protected abstract I receiverCaptcha(@NonNull File cacheDir,
+                                         @NonNull Downloader downloader,
+                                         @NonNull Uri uri)
+            throws IOException;
 
     private void onCaptchaReceivedAsync(final I captcha) {
         mUIHandler.post(new Runnable() {

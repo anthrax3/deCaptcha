@@ -1,5 +1,8 @@
 package io.ristretto.decaptcha.data;
 
+import android.os.Parcelable;
 
-public class Captcha {
+public interface Captcha {// extends Parcelable{
+
+    String getBaseURL();
 }
