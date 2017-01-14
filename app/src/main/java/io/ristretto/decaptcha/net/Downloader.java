@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpCookie;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,7 @@ public interface Downloader {
 
     Result download(URL url, HttpHeaders headers) throws IOException;
 
-    File download(File cacheDir, URL url, HttpHeaders headers) throws IOException;
+    Result post(URL url, HttpHeaders headers, byte[] postData) throws IOException;
 
-    HttpURLConnection connect(URL url, HttpHeaders headers) throws IOException;
+    File download(File cacheDir, URL url, HttpHeaders headers) throws IOException;
 }

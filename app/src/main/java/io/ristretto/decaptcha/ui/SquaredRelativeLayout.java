@@ -6,6 +6,9 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.widget.RelativeLayout;
 
+/**
+ * Relative layout which adapts its height to its width.
+ */
 public class SquaredRelativeLayout extends RelativeLayout {
     public SquaredRelativeLayout(Context context) {
         super(context);
@@ -24,10 +27,9 @@ public class SquaredRelativeLayout extends RelativeLayout {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    @SuppressWarnings("all")
+    @SuppressWarnings("SuspiciousNameCombination")
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, widthMeasureSpec);
-
     }
 }

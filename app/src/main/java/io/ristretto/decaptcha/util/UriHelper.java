@@ -1,11 +1,12 @@
-package io.ristretto.decaptcha.solver;
+package io.ristretto.decaptcha.util;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class Helper {
+public class UriHelper {
     public static final String[] PROTOCOLS_HTTP_AND_HTTPS = new String[]{"http", "https"};
 
     private static boolean isAllowedProtocol(String protocol, String[] protocols) {
@@ -22,12 +23,9 @@ public class Helper {
     }
 
 
-    public static URL uriToURL(Uri uri, String[] allowedProtocols) {
+    @NonNull
+    public static URL uriToURL(Uri uri, String[] allowedProtocols) throws MalformedURLException {
         checkAllowedProtocol(uri.getScheme(), allowedProtocols);
-        try {
-            return new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return new URL(uri.toString());
     }
 }

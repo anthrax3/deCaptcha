@@ -6,7 +6,7 @@
     android:baselineAligned="false">
 
     <TextView
-        android:text="TextView"
+        android:text=""
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/task" />
@@ -18,6 +18,15 @@
         android:numColumns="3"
         android:horizontalSpacing="1dp"
         android:verticalSpacing="1dp"
-        android:descendantFocusability="blocksDescendants">
+        android:choiceMode="multipleChoice"
+        android:descendantFocusability="blocksDescendants"
+        android:drawSelectorOnTop="true"
+        >
     </GridView>
+
+    <Button
+        android:id="@+id/submit_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/submit_captcha" />
 </LinearLayout>

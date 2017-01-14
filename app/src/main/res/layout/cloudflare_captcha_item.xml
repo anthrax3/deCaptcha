@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="5dp"
+    android:background="@drawable/captcha_selector">
 
     <ImageView
         android:id="@+id/captcha_tile"
@@ -18,18 +20,11 @@
         android:paddingRight="16dp"
         android:layout_alignParentBottom="true"
         android:background="@color/imageOverlayBackground">
-        <CheckBox
-            android:id="@+id/captcha_checkable"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:clickable="false"
-            android:focusable="false"
-            android:duplicateParentState="false"
-            android:checked="false"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true" />
     </RelativeLayout>
 
-
-
+    <View
+        android:layout_below="@id/captcha_tile"
+        android:layout_width="match_parent"
+        android:layout_height="10dp"
+        android:background="@drawable/captcha_selector" />
 </io.ristretto.decaptcha.ui.SquaredRelativeLayout>

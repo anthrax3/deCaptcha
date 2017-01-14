@@ -60,5 +60,9 @@ public class CloudFlareReCaptcha extends CaptchaImpl {
         public List<Bitmap> getPayloadImages() {
             return new ArrayList<>(payloadImages);
         }
+
+        public String getTaskDescription() {
+            return taskDescription;
+        }
     }
 }

@@ -33,10 +33,10 @@ import java.util.Formatter;
 import io.ristretto.decaptcha.R;
 import io.ristretto.decaptcha.data.ReCaptcha;
 import io.ristretto.decaptcha.net.Downloader;
-import io.ristretto.decaptcha.solver.Helper;
+import io.ristretto.decaptcha.util.UriHelper;
 
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
-import static io.ristretto.decaptcha.solver.Helper.PROTOCOLS_HTTP_AND_HTTPS;
+import static io.ristretto.decaptcha.util.UriHelper.PROTOCOLS_HTTP_AND_HTTPS;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -96,10 +96,11 @@ public class ReCaptchaSolverFragment extends CaptchaSolverFragment<ReCaptcha> {
     }
 
     @Override
-    protected ReCaptcha receiveCaptcha(final @NonNull File cacheDir, final @NonNull Downloader downloader, final @NonNull Uri uri) throws IOException {
-        URL url = Helper.uriToURL(uri, PROTOCOLS_HTTP_AND_HTTPS);
+    protected ReCaptcha receiveCaptcha(final @NonNull File cacheDir, final @NonNull Uri uri) throws IOException {
+        URL url = UriHelper.uriToURL(uri, PROTOCOLS_HTTP_AND_HTTPS);
         Document document = null;
-        Downloader.Result result = downloader.download(url);
+
+        Downloader.Result result = getDownloader().download(url);
         /*      if(result.getStatusCode() == HttpsURLConnection.HTTP_MOVED_PERM || result.getStatusCode() == HttpsURLConnection.HTTP_MOVED_TEMP) {
             String location = result.getResponseHeaders().get("location");
             Log.d(TAG, "Got redirection to " + location);

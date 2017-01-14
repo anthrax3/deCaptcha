@@ -2,7 +2,6 @@ package io.ristretto.decaptcha.solver.ui;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import io.ristretto.decaptcha.R;
+import io.ristretto.decaptcha.ui.ChaptchaTileView;
 
 /**
  * Created by coffeemakr on 13.01.17.
@@ -24,10 +24,12 @@ import io.ristretto.decaptcha.R;
 public class CFCaptchaAdapter extends BaseAdapter implements ListAdapter {
 
     static class CaptchaTile implements Checkable{
-        Bitmap bitmap;
+        final int id;
+        final Bitmap bitmap;
         boolean checked;
-        public CaptchaTile(Bitmap bitmap) {
+        public CaptchaTile(Bitmap bitmap, int id) {
             this.bitmap = bitmap;
+            this.id = id;
             setChecked(false);
         }
 
@@ -62,39 +64,77 @@ public class CFCaptchaAdapter extends BaseAdapter implements ListAdapter {
 
     @Override
     public long getItemId(int position) {
-        return tiles.get(position).hashCode();
+        return tiles.get(position).id;
     }
 
+    /*
     @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, ViewGroup parent) {
+        CheckBox checkBox;
+        if(convertView == null) {
+            checkBox = new CheckBox(parent.getContext());
+            checkBox.setClickable(false);
+            checkBox.setFocusable(false);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                checkBox.setBackgroundResource(R.drawable.captcha_selector);
+            }
+        } else {
+            checkBox = (CheckBox) convertView;
+        }
+        return checkBox;
+    } */
 
-        ViewHolder viewHolder;
+/*
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        CheckableImageButton checkableImageButton;
+        if(convertView == null) {
+            checkableImageButton = new SquaredCheckableImageButton(parent.getContext());
+            checkableImageButton.setClickable(false);
+            checkableImageButton.setFocusable(false);
+            checkableImageButton.setBackgroundResource(R.drawable.captcha_selector);
+        } else {
+            checkableImageButton = (CheckableImageButton) convertView;
+        }
+        //checkableImageButton.setChecked(tiles.get(position).isChecked());
+        checkableImageButton.setImageBitmap(tiles.get(position).bitmap);
+        return checkableImageButton;
+    }*/
+
+
+    @Override
+    public View getView(final int position, final View convertView, final ViewGroup parent) {
+        ChaptchaTileView view;
         if (convertView == null) {
             Context context = parent.getContext();
-            convertView = LayoutInflater.from(context).inflate(R.layout.cloudflare_captcha_item, parent, false);
+            view = new ChaptchaTileView(context);
+        } else {
+            view = (ChaptchaTileView) convertView;
         }
-        viewHolder = new ViewHolder(convertView);
         CaptchaTile tile = tiles.get(position);
-        viewHolder.imageView.setImageBitmap(tile.bitmap);
-        viewHolder.checkableView.setChecked(tile.isChecked());
+        view.setImageBitmap(tile.bitmap);
+        //viewHolder.checkableView.setChecked(tile.isChecked());
         return convertView;
     }
 
     public void setBitmapy(Collection<Bitmap> tiles) {
         this.tiles.clear();
+        int i = 0;
         for(Bitmap bitmap: tiles) {
-            this.tiles.add(new CaptchaTile(bitmap));
+            this.tiles.add(new CaptchaTile(bitmap, i));
+            ++i;
         }
         notifyDataSetChanged();
     }
 
-    static class ViewHolder {
+    private static class ViewHolder {
         final ImageView imageView;
-        final Checkable checkableView;
+        //final CheckBox checkableView;
 
         ViewHolder(View view){
             imageView = (ImageView) view.findViewById(R.id.captcha_tile);
-            checkableView = (Checkable) view.findViewById(R.id.captcha_checkable);
+            //checkableView = (CheckBox) view.findViewById(R.id.captcha);
         }
     }
 }

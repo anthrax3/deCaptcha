@@ -96,4 +96,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="new_captcha" >New Captcha</string>
     <string name="audio_captcha">Use audio captcha</string>
+    <string name="submit_captcha">Submit</string>
+    <string name="submit_captcha_failed">Failed to submit Captcha</string>
+    <string name="tile_selection_required">Please select a Captcha tile</string>
 </resources>

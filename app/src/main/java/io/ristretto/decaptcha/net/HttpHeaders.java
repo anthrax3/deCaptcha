@@ -1,6 +1,7 @@
 package io.ristretto.decaptcha.net;
 
 
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.CookieManager;
@@ -8,17 +9,26 @@ import java.net.CookieStore;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ *
+ * TODO: make case insensitive
+ */
 public class HttpHeaders extends HashMap<String, String> {
-    public static final String HEADER_REFERER = "Referer";
-    public static final String HEADER_USER_AGENT = "User-Agent";
+    private static final String TAG = "HttpHeaders";
 
+    public static final String HEADER_USER_AGENT = "User-Agent";
     public static final String ACCEPT_IMAGES = "image/png,image/*;q=0.8,*/*;q=0.5";
-    public static final String DEFAULT_ACCEPT_HEADER = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-    public static final String DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; rv:45.0) Gecko/20100101 Firefox/45.0";
+    public static final String CONTENT_TYPE = "Content-Type";
+    public static final String CONTENT_LENGTH = "Content-Length";
+    public static final String CONTENT_ENCODING = "Content-Encoding";
+    public static final String ACCEPT = "Accept";
+    public static final String ACCEPT_LANGUAGE = "Accept-Language";
+    public static final String ACCEPT_ENCODING = "Accept-Encoding";
 
     public HttpHeaders() {
         super();
@@ -27,6 +37,23 @@ public class HttpHeaders extends HashMap<String, String> {
     public HttpHeaders(Map<String, String> responseHeaders) {
         super(responseHeaders.size());
         this.putAll(responseHeaders);
+    }
+
+    private HttpHeaders(int size) {
+        super(size);
+    }
+
+    public static HttpHeaders fromMultiHeaders(Map<String, List<String>> headerFields) {
+        HttpHeaders headers = new HttpHeaders(headerFields.size());
+        for(Map.Entry<String, List<String>> entry: headerFields.entrySet()) {
+            List<String> values = entry.getValue();
+            if(values.size() > 1) {
+                // TODO: throw?
+                Log.w(TAG, "Ignoring additional values for header " + entry.getKey()  + ": " + Arrays.toString(values.toArray()));
+            }
+            headers.put(entry.getKey(), entry.getValue().get(0));
+        }
+        return headers;
     }
 
     private static Map<String, List<String>> singleToMultiHeaders(Map<String, String> single) {
@@ -50,7 +77,7 @@ public class HttpHeaders extends HashMap<String, String> {
     }
 
     public void setReferer(String referer) {
-        put(HEADER_REFERER, referer);
+        put(GracefulDownloader.HEADER_REFERER, referer);
     }
 
     public void setUserAgent(String userAgent) {
@@ -59,6 +86,7 @@ public class HttpHeaders extends HashMap<String, String> {
 
     public void putHeaders(HttpURLConnection httpURLConnection) {
         for(Entry<String, String> entry: entrySet()) {
+            Log.d(TAG, "Adding headers " + entry.getKey() + "=" + entry.getValue());
             httpURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
         }
     }

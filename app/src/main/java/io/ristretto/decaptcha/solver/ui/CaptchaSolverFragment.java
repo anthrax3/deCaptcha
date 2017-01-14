@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.View;
@@ -22,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 import io.ristretto.decaptcha.data.CaptchaImpl;
+import io.ristretto.decaptcha.net.Connector;
 import io.ristretto.decaptcha.net.Downloader;
-import io.ristretto.decaptcha.net.NetCipherDownloader;
+import io.ristretto.decaptcha.net.GracefulDownloader;
+import io.ristretto.decaptcha.net.NetCipherConnector;
 
 
 public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragment{
@@ -41,6 +44,9 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
 
     private boolean isReadyForCaptcha = false;
     private I pendingCaptcha = null;
+    private I mCaptcha;
+    private Downloader mDownloader;
+    private Connector mConnector;
 
     public interface OnFragmentInteractionListener {
         void onAuthentionHeadersResolved(Map<String, String> headers);
@@ -95,7 +101,8 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
         mHeandlerThread = new HandlerThread(TAG + "Thread");
         mHeandlerThread.start();
         mHandler = new Handler(mHeandlerThread.getLooper());
-        
+        mConnector = NetCipherConnector.getInstance();
+        mDownloader = new GracefulDownloader(mConnector);
         if(uri != null) {
             // TODO
             mHandler.post(new Runnable() {
@@ -104,7 +111,7 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
                     I captcha = null;
                     try {
                         Activity activity = getActivity();
-                        captcha = receiveCaptcha(activity.getCacheDir(), new NetCipherDownloader(), uri);
+                        captcha = receiveCaptcha(activity.getCacheDir(), uri);
                         onCaptchaReceivedAsync(captcha);
                     } catch (IOException e) {
                         Log.e(TAG, "Error while receiving ", e);
@@ -139,7 +146,6 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
     }
 
     protected abstract I receiveCaptcha(@NonNull File cacheDir,
-                                        @NonNull Downloader downloader,
                                         @NonNull Uri uri)
             throws IOException;
 
@@ -160,10 +166,27 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
     }
 
     protected void onCaptchaReceived(@NonNull I captcha) {
+        this.mCaptcha = captcha;
         notifyLoadingIsDone();
     }
-    
 
+
+    @Nullable
+    public I getCaptcha() {
+        return mCaptcha;
+    }
+
+    @NonNull
+    public Downloader getDownloader() {
+        if(mDownloader == null) throw new IllegalStateException("downloader not ready");
+        return mDownloader;
+    }
+
+
+    protected Connector getConnector() {
+        if(mConnector == null) throw new IllegalStateException("connector not ready");
+        return mConnector;
+    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -193,6 +216,7 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mDownloader = null;
         notifyLoadingIsAborted();
     }
 
@@ -200,6 +224,11 @@ public abstract class CaptchaSolverFragment<I extends CaptchaImpl> extends Fragm
         if(mListener != null) {
             mListener.onAuthentionHeadersResolved(headers);
         }
+    }
+
+    protected void notifyFailed(@StringRes int messageId, Throwable exception) {
+        String message = getString(messageId);
+        Log.e(TAG, message, exception);
     }
 
     /**

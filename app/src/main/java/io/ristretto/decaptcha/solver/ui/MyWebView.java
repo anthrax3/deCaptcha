@@ -10,9 +10,7 @@ import android.webkit.WebView;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
-/**
- * Created by coffeemakr on 12.01.17.
- */
+
 public class MyWebView extends WebView {
     private static final String TAG = "MyWebView";
 
