@@ -23,31 +23,12 @@ import io.ristretto.decaptcha.ui.ChaptchaTileView;
 
 public class CFCaptchaAdapter extends BaseAdapter implements ListAdapter {
 
-    static class CaptchaTile implements Checkable{
+    private static class CaptchaTile{
         final int id;
         final Bitmap bitmap;
-        boolean checked;
         public CaptchaTile(Bitmap bitmap, int id) {
             this.bitmap = bitmap;
             this.id = id;
-            setChecked(false);
-        }
-
-        @Override
-        public void setChecked(boolean checked) {
-            if(this.checked != checked) {
-                this.checked = checked;
-            }
-        }
-
-        @Override
-        public boolean isChecked() {
-            return checked;
-        }
-
-        @Override
-        public void toggle() {
-            setChecked(!checked);
         }
     }
     private final ArrayList<CaptchaTile> tiles = new ArrayList<>();
@@ -67,42 +48,6 @@ public class CFCaptchaAdapter extends BaseAdapter implements ListAdapter {
         return tiles.get(position).id;
     }
 
-    /*
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        CheckBox checkBox;
-        if(convertView == null) {
-            checkBox = new CheckBox(parent.getContext());
-            checkBox.setClickable(false);
-            checkBox.setFocusable(false);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                checkBox.setBackgroundResource(R.drawable.captcha_selector);
-            }
-        } else {
-            checkBox = (CheckBox) convertView;
-        }
-        return checkBox;
-    } */
-
-/*
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        CheckableImageButton checkableImageButton;
-        if(convertView == null) {
-            checkableImageButton = new SquaredCheckableImageButton(parent.getContext());
-            checkableImageButton.setClickable(false);
-            checkableImageButton.setFocusable(false);
-            checkableImageButton.setBackgroundResource(R.drawable.captcha_selector);
-        } else {
-            checkableImageButton = (CheckableImageButton) convertView;
-        }
-        //checkableImageButton.setChecked(tiles.get(position).isChecked());
-        checkableImageButton.setImageBitmap(tiles.get(position).bitmap);
-        return checkableImageButton;
-    }*/
-
-
     @Override
     public View getView(final int position, final View convertView, final ViewGroup parent) {
         ChaptchaTileView view;
@@ -114,8 +59,7 @@ public class CFCaptchaAdapter extends BaseAdapter implements ListAdapter {
         }
         CaptchaTile tile = tiles.get(position);
         view.setImageBitmap(tile.bitmap);
-        //viewHolder.checkableView.setChecked(tile.isChecked());
-        return convertView;
+        return view;
     }
 
     public void setBitmapy(Collection<Bitmap> tiles) {
@@ -126,15 +70,5 @@ public class CFCaptchaAdapter extends BaseAdapter implements ListAdapter {
             ++i;
         }
         notifyDataSetChanged();
-    }
-
-    private static class ViewHolder {
-        final ImageView imageView;
-        //final CheckBox checkableView;
-
-        ViewHolder(View view){
-            imageView = (ImageView) view.findViewById(R.id.captcha_tile);
-            //checkableView = (CheckBox) view.findViewById(R.id.captcha);
-        }
     }
 }

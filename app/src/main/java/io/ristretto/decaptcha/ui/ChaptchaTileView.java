@@ -13,12 +13,13 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Checkable;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import io.ristretto.decaptcha.R;
 
 
-public class ChaptchaTileView extends View implements Checkable{
+public class ChaptchaTileView extends FrameLayout implements Checkable{
 
     private static final int[] DRAWABLE_STATE_CHECKED = new int[]{android.R.attr.state_checked};
 
@@ -47,7 +48,7 @@ public class ChaptchaTileView extends View implements Checkable{
             }
         });
 
-        View.inflate(context, R.layout.cloudflare_captcha_item, null);
+        View.inflate(context, R.layout.cloudflare_captcha_item, this);
     }
 
 
@@ -60,7 +61,7 @@ public class ChaptchaTileView extends View implements Checkable{
             ImageView imageView = (ImageView) findViewById(R.id.captcha_tile);
             if(mChecked) {
                 ColorMatrix cm = new ColorMatrix();
-                cm.setSaturation(50);
+                cm.setSaturation(0.5f);
                 ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
                 imageView.setColorFilter(f);
             } else {
