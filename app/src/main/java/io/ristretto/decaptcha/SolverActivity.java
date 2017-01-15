@@ -19,8 +19,7 @@ import android.widget.Toast;
 
 import org.jetbrains.annotations.Contract;
 
-import java.util.Map;
-
+import io.ristretto.decaptcha.captcha.CaptchaResult;
 import io.ristretto.decaptcha.solver.ui.CaptchaSolverFragment;
 import io.ristretto.decaptcha.solver.ui.CloudFlareSolverFragment;
 
@@ -174,8 +173,21 @@ public class SolverActivity extends AppCompatActivity
     }
 
     @Override
-    public void onAuthentionHeadersResolved(Map<String, String> headers) {
+    public void onResult(@NonNull CaptchaResult captchaResult) {
+        Log.d(TAG, "Got result: " + captchaResult);
+        showResultFragment(captchaResult);
+    }
 
+    private void showResultFragment(CaptchaResult captchaResult) {
+        ResultFragment fragment = getActiveFragment(ResultFragment.class);
+        if(fragment == null) {
+            fragment = ResultFragment.newInstance(captchaResult);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment, fragment)
+                    .commit();
+        }else {
+            fragment.updateResult(captchaResult);
+        }
     }
 
     @Override
@@ -221,7 +233,7 @@ public class SolverActivity extends AppCompatActivity
         }
 
         @Override
-        public void onAbort(@NonNull CaptchaSolverFragment fragment) {
+        public void onAbort(@NonNull CaptchaSolverFragment fragment, Throwable reason) {
             hideProgressBar();
         }
     }

@@ -8,6 +8,7 @@ import java.net.CookieManager;
 import java.net.CookieStore;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -89,5 +90,9 @@ public class HttpHeaders extends HashMap<String, String> {
             Log.d(TAG, "Adding headers " + entry.getKey() + "=" + entry.getValue());
             httpURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
         }
+    }
+
+    public void setReferer(URL referer) {
+        setReferer(referer.toString());
     }
 }

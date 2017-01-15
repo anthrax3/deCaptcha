@@ -19,18 +19,18 @@ import android.widget.ImageView;
 import io.ristretto.decaptcha.R;
 
 
-public class ChaptchaTileView extends FrameLayout implements Checkable{
+public class CaptchaTileView extends FrameLayout implements Checkable{
 
     private static final int[] DRAWABLE_STATE_CHECKED = new int[]{android.R.attr.state_checked};
 
     private boolean mChecked;
 
 
-    public ChaptchaTileView(Context context) {
+    public CaptchaTileView(Context context) {
         this(context, null);
     }
 
-    public ChaptchaTileView(Context context, @Nullable AttributeSet attrs) {
+    public CaptchaTileView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         ViewCompat.setAccessibilityDelegate(this, new AccessibilityDelegateCompat() {
             @Override
@@ -61,7 +61,7 @@ public class ChaptchaTileView extends FrameLayout implements Checkable{
             ImageView imageView = (ImageView) findViewById(R.id.captcha_tile);
             if(mChecked) {
                 ColorMatrix cm = new ColorMatrix();
-                cm.setSaturation(0.5f);
+                cm.setSaturation(0.1f);
                 ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
                 imageView.setColorFilter(f);
             } else {

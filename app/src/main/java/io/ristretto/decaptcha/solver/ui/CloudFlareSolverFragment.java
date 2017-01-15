@@ -1,6 +1,8 @@
 package io.ristretto.decaptcha.solver.ui;
 
-import android.app.Activity;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -15,52 +17,68 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import io.ristretto.decaptcha.R;
-import io.ristretto.decaptcha.data.CloudFlareReCaptcha;
+import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
+import io.ristretto.decaptcha.loader.CaptchaManager;
+import io.ristretto.decaptcha.loader.CloudFlareCaptchaManager;
 import io.ristretto.decaptcha.net.Downloader;
-import io.ristretto.decaptcha.net.HttpHeaders;
-import io.ristretto.decaptcha.net.PostDataBuilder;
-import io.ristretto.decaptcha.util.UriHelper;
-
-import static io.ristretto.decaptcha.data.CloudFlareReCaptcha.Challenge;
-import static io.ristretto.decaptcha.util.UriHelper.PROTOCOLS_HTTP_AND_HTTPS;
+import io.ristretto.decaptcha.ui.CaptchaTileView;
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareReCaptcha> {
+public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareReCaptcha.Challenge, CloudFlareReCaptcha> {
 
     private static final String TAG = "CFSolverFragment";
-    private CFCaptchaAdapter mAdapter;
 
-    private static final String NAME_REASON="reason";
-    private static final String NAME_CHALLENGE_ID = "c";
-    private static final String NAME_RESPONSE = "response";
+    private static final int MAX_IMAGE_HEIGHT = 700;
+    private static final int MAX_IMAGE_WIDTH = 700;
 
-    private static final String REASON_ANOTHER_CHALLENGE = "r";
-    private static final String REASON_AUDIO = "a";
+    private TileAdapter mAdapter;
+
 
     public static final int LOADING_STEPS = 4;
+    private int mShortAnimationDuration;
+    private View mCaptchaView;
+    private CloudFlareCaptchaManager mCaptchaManager;
 
     public CloudFlareSolverFragment() {
+        // Empty constructor as required for fragments
+        super();
+    }
+
+
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Retrieve and cache the system's default "short" animation time.
+        mShortAnimationDuration = getResources().getInteger(
+                android.R.integer.config_shortAnimTime);
+        mCaptchaManager = new CloudFlareCaptchaManager(getDownloader(), getContext().getCacheDir());
+    }
+
+
+    @Override
+    protected CaptchaManager<CloudFlareReCaptcha.Challenge, CloudFlareReCaptcha> getCaptchaManager() {
+        return mCaptchaManager;
     }
 
     @Override
@@ -68,7 +86,8 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.cloudflare_solver_fragment, container, false);
         final GridView gridView = (GridView) view.findViewById(R.id.grid_view);
-        mAdapter = new CFCaptchaAdapter();
+        mAdapter = new TileAdapter();
+        mCaptchaView = view.findViewById(R.id.captcha);
         gridView.setAdapter(mAdapter);
         gridView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -82,6 +101,15 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
             }
         });
 
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(TAG, "Item clicked      : " + position + " - id: " + id);
+                Log.d(TAG, "Checked positions : " + gridView.getCheckedItemPositions());
+                Log.d(TAG, "Checked item ids  : " + Arrays.toString(gridView.getCheckedItemIds()));
+            }
+        });
+
         Button submitButton = (Button) view.findViewById(R.id.submit_button);
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,14 +120,6 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         setHasOptionsMenu(true);
         return view;
     }
-
-
-
-    private void hideTile(int position, boolean isChecked) {
-        View view = getView();
-        if(view == null) return;
-    }
-
 
     private long[] getAnswers() {
         View view = getView();
@@ -118,21 +138,50 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
             return;
         }
         final long[] selectedAnswers = getAnswers();
-
-        if(selectedAnswers.length == 1) {
+        if(selectedAnswers.length == 0) {
             Toast.makeText(getContext(), R.string.tile_selection_required , Toast.LENGTH_SHORT).show();
         } else {
+            /*
+            for(long answer: selectedAnswers) {
+                mAdpater.remove(answer);
+            }*/
+            hideCaptcha();
             getHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        submitCaptcha(selectedAnswers, captcha);
+                        mCaptchaManager.submitTask(captcha, captcha.getChallenge(), (Object) selectedAnswers);
                     } catch (IOException e) {
                         notifyFailed(R.string.submit_captcha_failed, e);
+                    } catch (CaptchaManager.LoaderException e) {
+                        e.printStackTrace();
                     }
                 }
             });
         }
+    }
+
+
+    private void hideCaptcha() {
+        mCaptchaView.animate()
+                .alpha(0f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        mCaptchaView.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+    private void showCaptcha() {
+        mCaptchaView.setAlpha(0f);
+        mCaptchaView.setVisibility(View.VISIBLE);
+        mCaptchaView.animate()
+                .alpha(1f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
     }
 
     private static void logResult(Downloader.Result result) {
@@ -154,181 +203,43 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         }
     }
 
-    private void submitCaptcha(long[] selectedAnswers, final CloudFlareReCaptcha captcha) throws IOException {
-        Log.d(TAG, "SUbmitting captcha");
-        Downloader downloader = getDownloader();
-        URL url = new URL(captcha.getIFrameUrl());
-        HttpHeaders header = new HttpHeaders();
-        header.setReferer(captcha.getIFrameUrl());
-        PostDataBuilder dataBuilder = new PostDataBuilder();
-        dataBuilder.add(NAME_RESPONSE, selectedAnswers);
-        dataBuilder.add(NAME_CHALLENGE_ID, captcha.getChallenge().getIdentifier());
-
-        Downloader.Result result = downloader.post(url, header, dataBuilder.getBytes());
-        if(result.getStatusCode() != HttpURLConnection.HTTP_OK) {
-            logResult(result);
-            throw new IOException("Failed to submit captcha: " + result.getStatusCode());
-        }
-        Document document = Jsoup.parse(result.getInputStream(), result.getCharset(), url.toString());
-        Log.w(TAG, "Document: " + document);
-        String verificationToken = getVerficationToken(document);
-        if(verificationToken != null) {
-            Log.d(TAG, "Got verification token: " + verificationToken);
-        } else {
-            loadTaskFromIFrame(getContext().getCacheDir(), document, captcha, downloader);
-            Activity activity = getActivity();
-            if (activity == null) {
-                Log.e(TAG, "Can't submit new task");
-                return;
-            }
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    updateChallenge(captcha.getChallenge());
-                }
-            });
-        }
-    }
-
-
-    private static String getChallengeId(Element form) throws IOException {
-        return form.getElementsByAttributeValue("name", NAME_CHALLENGE_ID).first().val();
-    }
-
-
-
-    private static ArrayList<Bitmap> splitPayloadImage(File payloadImage, int numberOfAnswers) throws IOException {
-        if(numberOfAnswers != 9) throw new RuntimeException("Can only handle 9!");
-        ArrayList<Bitmap> result = new ArrayList<>(numberOfAnswers);
+    @NonNull
+    private static BitmapFactory.Options checkImageSize(String imagePath) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(payloadImage.getAbsolutePath(), options);
+        BitmapFactory.decodeFile(imagePath, options);
         int imageHeight = options.outHeight;
         int imageWidth = options.outWidth;
-        if(imageHeight > 700 || imageWidth > 700) {
-            throw new IOException("Payload image to big: " + imageWidth + "x" +  imageHeight);
+        if(imageHeight > MAX_IMAGE_HEIGHT || imageWidth > MAX_IMAGE_WIDTH) {
+            throw new RuntimeException("Payload image to big: " + imageWidth + "x" +  imageHeight);
         }
+        return options;
+    }
 
-        Bitmap wholeImage = BitmapFactory.decodeFile(payloadImage.getAbsolutePath());
+    @NonNull
+    private static ArrayList<Bitmap> createChallengeTiles(CloudFlareReCaptcha.Challenge challenge) {
+        final int rows = challenge.getImageRows();
+        final int columns = challenge.getImageColumns();
+        final int numberOfAnswers = challenge.getNumberOfAnswers();
 
-        int partWidth = imageWidth / 3;
-        int partHeight = imageHeight / 3;
+        ArrayList<Bitmap> result = new ArrayList<>(numberOfAnswers);
+        String imagePath = challenge.getPayloadImage().getAbsolutePath();
+        BitmapFactory.Options options = checkImageSize(imagePath);
+
+        Bitmap wholeImage = BitmapFactory.decodeFile(imagePath);
+
+        int partWidth = options.outWidth / columns;
+        int partHeight = options.outHeight / rows;
         for(int i = 0; i < numberOfAnswers; ++i) {
-            int x = ((int) (i % 3)) * partWidth;
-            int y = ((int) (i / 3)) * partHeight;
+            int x = (i % columns) * partWidth;
+            int y = (i / columns) * partHeight;
             Bitmap part = Bitmap.createBitmap(wholeImage, x, y, partWidth, partHeight);
             result.add(part);
         }
         return result;
     }
 
-    @Nullable
-    private String getVerficationToken(Document document) {
-        Element element = document.getElementsByClass("fbc-verification-token").first();
-        if(element == null) {
-            return null;
-        }
-        Element textArea = element.getElementsByTag("textarea").first();
-        if(textArea == null) {
-            throw new RuntimeException("TextArea not found in " + element.html());
-        }
-        return textArea.val();
-    }
-
-    private void loadTaskFromIFrame(File cacheDir, Document iframe, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
-        Element label = iframe.select("label[for=response]").first();
-        if(label == null) {
-            label = iframe.select(".fbc-imageselect-message-error").first();
-        }
-        String task = "???";
-        if(label == null) {
-            Log.e(TAG, "Couldn't find task.");
-        } else {
-            task = label.text();
-        }
-        Elements forms = iframe.select(".fbc-imageselect-challenge form");
-        if(forms.size() > 1) {
-            throw new RuntimeException("Expected only 1 <form> got " + forms.size());
-        }
-        Element form = forms.first();
-        if(form == null) {
-            throw new IOException("Form not found");
-        }
-        Elements checkboxes = form.select("input[name=response]");
-        int numberOfAnswers = checkboxes.size();
-        if(numberOfAnswers != 9) {
-            Log.w(TAG, "unexpected answer count!: " + numberOfAnswers);
-        }
-        String challengeId = getChallengeId(form);
-        File payload = loadPayload(challengeId, cacheDir, captcha, downloader);
-        notifyLoadingProgress(3,LOADING_STEPS);
-        ArrayList<Bitmap> images = splitPayloadImage(payload, numberOfAnswers);
-        Challenge challenge = new Challenge(challengeId, task, numberOfAnswers, images);
-        captcha.setChallenge(challenge);
-        notifyLoadingProgress(4,LOADING_STEPS);
-    }
-
-    private static File loadPayload(String challengeId, File cacheDir, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
-        String payloadUrl = captcha.getPayloadUrl(challengeId);
-        HttpHeaders payloadHeaders = new HttpHeaders();
-        payloadHeaders.setReferer(captcha.getIFrameUrl());
-        return downloader.download(cacheDir, new URL(payloadUrl), payloadHeaders);
-    }
-
-    @Override
-    protected CloudFlareReCaptcha receiveCaptcha(final @NonNull File cacheDir, final @NonNull Uri uri) throws IOException {
-        URL url = UriHelper.uriToURL(uri, PROTOCOLS_HTTP_AND_HTTPS);
-
-        Downloader downloader = getDownloader();
-        Downloader.Result result = downloader.download(url);
-
-
-        Document document = Jsoup.parse(result.getInputStream(), result.getCharset(), uri.toString());
-        logResult(result);
-        System.err.println(document.html());
-
-
-        notifyLoadingProgress(1,LOADING_STEPS);
-
-        Elements captchaContainers = document.getElementsByAttribute("data-stoken");
-        String siteKey = null;
-        String stoken = null;
-        if (!captchaContainers.isEmpty()) {
-            for (Element element : captchaContainers) {
-                siteKey = element.attr("data-sitekey");
-                if (!siteKey.isEmpty()) {
-                    stoken = element.attr("data-stoken");
-                    break;
-                }
-            }
-        }
-        if (siteKey == null || siteKey.isEmpty()) {
-            throw new IOException("siteKey = null");
-        }
-        if (stoken == null) {
-            throw new IOException("stoken = null");
-        }
-
-        CloudFlareReCaptcha reCaptcha = new CloudFlareReCaptcha(uri.toString(), siteKey, stoken);
-
-
-
-        String fallbackUrl = reCaptcha.getIFrameUrl();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setReferer(reCaptcha.getBaseURL());
-        result = downloader.download(new URL(fallbackUrl), headers);
-        if(result.getStatusCode() != 200) {
-            throw new FileNotFoundException("Fallback returned " + result.getStatusCode());
-        }
-
-        document = Jsoup.parse(result.getInputStream(), result.getCharset(), fallbackUrl);
-        notifyLoadingProgress(2,LOADING_STEPS);
-
-        loadTaskFromIFrame(cacheDir, document, reCaptcha, downloader);
-        return reCaptcha;
-    }
-
-    private void updateChallenge(Challenge challenge) {
+    private void updateChallenge(CloudFlareReCaptcha.Challenge challenge) {
         if(challenge == null) return;
         View view = getView();
         if(view == null) {
@@ -336,27 +247,25 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         }
         TextView textView = (TextView) view.findViewById(R.id.task);
         textView.setText(challenge.getTaskDescription());
-        mAdapter.setBitmapy(challenge.getPayloadImages());
+        mAdapter.setBitmaps(createChallengeTiles(challenge));
     }
 
     @Override
-    protected void onCaptchaReceived(@NonNull CloudFlareReCaptcha captcha) {
-        super.onCaptchaReceived(captcha);
-        Log.d(TAG, "On Captcha received");
-
-        updateChallenge(captcha.getChallenge());
+    protected void onCaptchaChallengeLoaded(@NonNull CloudFlareReCaptcha captcha, @NonNull CloudFlareReCaptcha.Challenge challenge) {
+        super.onCaptchaChallengeLoaded(captcha, challenge);
+        Log.d(TAG, "onCaptchaChallengeLoaded " + captcha + " " + challenge);
+        updateChallenge(challenge);
+        showCaptcha();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.reload_captcha:
-                // TODO
-                Log.d(TAG, "Reload request");
+                onReloadCaptchaClicked();
                 break;
             case R.id.captcha_audio:
-                // TODO
-                Log.d(TAG, "Audio requested");
+                onAudioCaptchaClicked();
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -364,9 +273,122 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         return true;
     }
 
+    private void onReloadCaptchaClicked() {
+        hideCaptcha();
+        final CloudFlareReCaptcha captcha = getCaptcha();
+        getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mCaptchaManager.loadNewChallenge(captcha);
+                } catch (IOException e) {
+                    notifyFailed(R.string.reload_captcha_failed, e);
+                }
+            }
+        });
+    }
+
+    private void onAudioCaptchaClicked() {
+        hideCaptcha();
+        final CloudFlareReCaptcha captcha = getCaptcha();
+        getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mCaptchaManager.loadNewAudioChallenge(captcha);
+                } catch (IOException e) {
+                    notifyFailed(R.string.reload_captcha_failed, e);
+                }
+            }
+        });
+    }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_cloudflare_solver, menu);
+    }
+
+    private static class TileAdapter extends BaseAdapter implements ListAdapter {
+
+        private final ArrayList<CaptchaTile> tiles = new ArrayList<>();
+
+        @Override
+        public boolean hasStableIds() {
+            // It's important to return true otherwise {@link GridView#getCheckedItemIds} returns
+            // an empty array!
+            return true;
+        }
+
+        @Override
+        public int getCount() {
+            return tiles.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return tiles.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            if(position >= tiles.size()) {
+                // Maybe there is a better way to handle this but when removing tiles
+                // with removeTile() this method is called with a unexisting position.
+                return -1;
+            }
+            return tiles.get(position).id;
+
+        }
+
+        @Override
+        public View getView(final int position, final View convertView, final ViewGroup parent) {
+            CaptchaTileView view;
+            if (convertView == null) {
+                Context context = parent.getContext();
+                view = new CaptchaTileView(context);
+                view.setFocusable(false);
+                view.setClickable(false);
+            } else {
+                view = (CaptchaTileView) convertView;
+            }
+            CaptchaTile tile = tiles.get(position);
+            view.setImageBitmap(tile.bitmap);
+            return view;
+        }
+
+        private void setBitmaps(Collection<Bitmap> tiles) {
+            this.tiles.clear();
+            int i = 0;
+            for(Bitmap bitmap: tiles) {
+                this.tiles.add(new CaptchaTile(bitmap, i));
+                ++i;
+            }
+            notifyDataSetChanged();
+        }
+
+        private void removeTile(long id) {
+            for (Iterator<CaptchaTile> iterator = tiles.iterator(); iterator.hasNext(); ) {
+                CaptchaTile captchaTile = iterator.next();
+                if(captchaTile.id == id) {
+                    Log.d(TAG, "Tile removed: " + id);
+                    iterator.remove();
+                    notifyDataSetChanged();
+                    break;
+                }
+            }
+        }
+
+        /**
+         * Contains the information of a captcha tile
+         */
+        private static class CaptchaTile{
+            private final int id;
+            private final Bitmap bitmap;
+            private CaptchaTile(Bitmap bitmap, int id) {
+                this.bitmap = bitmap;
+                this.id = id;
+            }
+        }
     }
 }

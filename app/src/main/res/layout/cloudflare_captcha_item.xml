@@ -21,10 +21,4 @@
         android:layout_alignParentBottom="true"
         android:background="@color/imageOverlayBackground">
     </RelativeLayout>
-
-    <View
-        android:layout_below="@id/captcha_tile"
-        android:layout_width="match_parent"
-        android:layout_height="10dp"
-        android:background="@drawable/captcha_selector" />
 </io.ristretto.decaptcha.ui.SquaredRelativeLayout>

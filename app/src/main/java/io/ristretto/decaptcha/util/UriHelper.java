@@ -24,8 +24,12 @@ public class UriHelper {
 
 
     @NonNull
-    public static URL uriToURL(Uri uri, String[] allowedProtocols) throws MalformedURLException {
+    public static URL uriToURL(Uri uri, String[] allowedProtocols) {
         checkAllowedProtocol(uri.getScheme(), allowedProtocols);
-        return new URL(uri.toString());
+        try {
+            return new URL(uri.toString());
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }
