@@ -280,7 +280,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
             public void run() {
                 try {
                     mCaptchaManager.loadNewChallenge(captcha);
-                } catch (IOException e) {
+                } catch (CaptchaManager.LoaderException | IOException e) {
                     notifyFailed(R.string.reload_captcha_failed, e);
                 }
             }
@@ -295,7 +295,7 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
             public void run() {
                 try {
                     mCaptchaManager.loadNewAudioChallenge(captcha);
-                } catch (IOException e) {
+                } catch (CaptchaManager.LoaderException | IOException e) {
                     notifyFailed(R.string.reload_captcha_failed, e);
                 }
             }

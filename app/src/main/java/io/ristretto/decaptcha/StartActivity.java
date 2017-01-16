@@ -3,7 +3,6 @@ package io.ristretto.decaptcha;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -26,24 +25,19 @@ public class StartActivity extends AppCompatActivity
     private CaptchaResult captchaResult;
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
+    public void onURLChanged(Uri uri) {
         this.startingPoint = uri;
         showFAB();
     }
 
-
     private void showStartFragment(String defaultUrl) {
-        showStartFragment(defaultUrl, null);
-    }
-
-    private void showStartFragment(String defaultUrl, @Nullable String errorMessage) {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment);
         if (fragment instanceof StartFragment) {
             Log.d(TAG, "Updating default url: " + defaultUrl);
             ((StartFragment) fragment).updateDefaultUrl(defaultUrl);
         } else {
             Log.d(TAG, "Creating start fragment with default url: " + defaultUrl);
-            fragment = StartFragment.newInstance(defaultUrl, errorMessage);
+            fragment = StartFragment.newInstance(defaultUrl);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment, fragment)
                     .commit();
@@ -77,6 +71,7 @@ public class StartActivity extends AppCompatActivity
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.hide();
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -88,8 +83,6 @@ public class StartActivity extends AppCompatActivity
                             Toast.LENGTH_SHORT).show();
                 }
             }
-
-
         });
         showStartFragment("https://www.cloudflare.com/ddos/");
     }

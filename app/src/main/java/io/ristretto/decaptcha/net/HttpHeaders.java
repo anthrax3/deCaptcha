@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.net.CookieManager;
 import java.net.CookieStore;
 import java.net.HttpCookie;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -16,12 +15,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
-/**
- *
- * TODO: make case insensitive
- */
-public class HttpHeaders extends HashMap<String, String> {
+
+public class HttpHeaders extends TreeMap<String, String> {
     private static final String TAG = "HttpHeaders";
 
     public static final String HEADER_REFERER = "Referer";
@@ -39,16 +36,12 @@ public class HttpHeaders extends HashMap<String, String> {
     }
 
     public HttpHeaders(Map<String, String> responseHeaders) {
-        super(responseHeaders.size());
-        this.putAll(responseHeaders);
-    }
-
-    private HttpHeaders(int size) {
-        super(size);
+        super(String.CASE_INSENSITIVE_ORDER);
+        putAll(responseHeaders);
     }
 
     public static HttpHeaders fromMultiHeaders(Map<String, List<String>> headerFields) {
-        HttpHeaders headers = new HttpHeaders(headerFields.size());
+        HttpHeaders headers = new HttpHeaders();
         for(Map.Entry<String, List<String>> entry: headerFields.entrySet()) {
             List<String> values = entry.getValue();
             if(values.size() > 1) {
@@ -86,17 +79,6 @@ public class HttpHeaders extends HashMap<String, String> {
 
     public void setReferer(String referer) {
         put(HEADER_REFERER, referer);
-    }
-
-    public void setUserAgent(String userAgent) {
-        put(HEADER_USER_AGENT, userAgent);
-    }
-
-    public void putHeaders(HttpURLConnection httpURLConnection) {
-        for(Entry<String, String> entry: entrySet()) {
-            Log.d(TAG, "Adding headers " + entry.getKey() + "=" + entry.getValue());
-            httpURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
-        }
     }
 
     public void setReferer(URL referer) {

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,10 +22,11 @@ import android.widget.EditText;
  * create an instance of this fragment.
  */
 public class StartFragment extends Fragment {
-    private static final String ARG_DEFAULT_URL = "default_url";
+    private static final String ARG_URL = "url";
+    private final static String TAG = "StartFragment";
 
-    private String defaultUrl;
-    private boolean textWasChanged = false;
+    private Uri uri;
+    private boolean uriWasChanged = false;
 
     private OnFragmentInteractionListener mListener;
 
@@ -32,10 +34,10 @@ public class StartFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static StartFragment newInstance(String url, String errorMessage) {
+    public static StartFragment newInstance(String url) {
         StartFragment fragment = new StartFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_DEFAULT_URL, url);
+        args.putParcelable(ARG_URL, Uri.parse(url));
         fragment.setArguments(args);
         return fragment;
     }
@@ -44,11 +46,15 @@ public class StartFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            defaultUrl = savedInstanceState.getString(ARG_DEFAULT_URL);
+            uri = savedInstanceState.getParcelable(ARG_URL);
         } else if (getArguments() != null) {
-            defaultUrl = getArguments().getString(ARG_DEFAULT_URL);
-        } else {
-            defaultUrl = "";
+            uri = getArguments().getParcelable(ARG_URL);
+        }
+        if(uri == null) {
+            Log.w(TAG, "No URI set");
+            Uri.Builder builder = new Uri.Builder();
+            builder.scheme("https");
+            uri = builder.build();
         }
     }
 
@@ -58,8 +64,8 @@ public class StartFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_start, container, false);
         final EditText urlEditText = (EditText) view.findViewById(R.id.url);
-        urlEditText.setText(defaultUrl);
-        textWasChanged = false;
+        urlEditText.setText(uri.toString());
+        uriWasChanged = false;
         urlEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -71,32 +77,18 @@ public class StartFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                textWasChanged = true;
-                updateText(s);
+                uriWasChanged = true;
+                setUri(s);
             }
         });
-        updateText(defaultUrl);
         return view;
     }
 
 
-    private void updateText(CharSequence text) {
-        if(text == null) {
-            View view = getView();
-            if (view == null) return;
-            EditText editText = (EditText) view.findViewById(R.id.url);
-            text = editText.getText();
-        }
-        Uri uri = Uri.parse(text.toString());
-        if(mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(ARG_DEFAULT_URL, defaultUrl);
+        outState.putParcelable(ARG_URL, uri);
     }
 
 
@@ -105,7 +97,7 @@ public class StartFragment extends Fragment {
         super.onAttach(context);
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
-            updateText(null);
+            mListener.onURLChanged(uri);
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -118,14 +110,25 @@ public class StartFragment extends Fragment {
         mListener = null;
     }
 
+    /**
+     * Update the default url
+     * @param defaultUrl the default url
+     */
     public void updateDefaultUrl(String defaultUrl) {
-        this.defaultUrl = defaultUrl;
-        if(!textWasChanged) {
+        if(!uriWasChanged) {
+            this.uri = Uri.parse(defaultUrl);
             View view = getView();
             if(view == null) return;
             EditText editText = (EditText) view.findViewById(R.id.url);
             editText.setText(defaultUrl);
-            textWasChanged = false; // we changed it
+            uriWasChanged = false; // we changed it
+        }
+    }
+
+    public void setUri(Editable uriFromText) {
+        uri = Uri.parse(uriFromText.toString());
+        if (mListener != null) {
+            mListener.onURLChanged(uri);
         }
     }
 
@@ -134,13 +137,8 @@ public class StartFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        void onURLChanged(Uri uri);
     }
 }

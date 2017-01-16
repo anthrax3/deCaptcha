@@ -49,6 +49,8 @@ public class GracefulDownloader implements Downloader {
 
     private static final String METHOD_GET = "GET";
     private static final String METHOD_POST = "POST";
+    private static final String CHARSET_IN_CONTENT_TYPE = "charset=";
+    private static final String CONTENT_TYPE_DELIMITER = ";";
 
     private final Connector mConnector;
     private final String mUserAgent;
@@ -131,7 +133,7 @@ public class GracefulDownloader implements Downloader {
     public File download(File cacheDir, URL url, HttpHeaders headers) throws IOException {
         File output = File.createTempFile(TAG, null, cacheDir);
         setDefaultHeaders(headers);
-        HttpURLConnection httpURLConnection = mConnector.connect("GET", url, headers);
+        HttpURLConnection httpURLConnection = mConnector.connect(METHOD_GET, url, headers);
         InputStream inputStream = httpURLConnection.getInputStream();
         OutputStream outputStream = new FileOutputStream(output);
         IOHelper.copy(inputStream, outputStream);
@@ -164,7 +166,7 @@ public class GracefulDownloader implements Downloader {
         @Override
         public InputStream getInputStream() throws IOException {
             InputStream inputStream;
-            if(getStatusCode() >= 400) {
+            if(getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
                 inputStream = httpUrlConnection.getErrorStream();
             } else {
                 inputStream = httpUrlConnection.getInputStream();
@@ -184,15 +186,14 @@ public class GracefulDownloader implements Downloader {
         public String getCharset() {
             final String contentType = getContentType();
             if(contentType == null) return null;
-            String[] values = contentType.split(";"); // values.length should be 2
+            String[] values = contentType.split(CONTENT_TYPE_DELIMITER); // values.length should be 2
             String charset = null;
 
             for (String value : values) {
                 value = value.trim();
 
-                if (value.toLowerCase().startsWith("charset=")) {
-                    charset = value.substring("charset=".length());
-                    charset = charset.trim();
+                if (value.toLowerCase().startsWith(CHARSET_IN_CONTENT_TYPE)) {
+                    charset = value.substring(CHARSET_IN_CONTENT_TYPE.length()).trim();
                     if(charset.isEmpty()) {
                         charset = null;
                     } else {
