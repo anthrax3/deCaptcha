@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.ristretto.decaptcha.captcha.CaptchaResult;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha.Challenge;
 import io.ristretto.decaptcha.net.Downloader;
@@ -265,9 +266,8 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         }
         HttpHeaders httpHeaders = new HttpHeaders(result.getResponseHeaders());
         CookieStore cookieStore = httpHeaders.getCookieStore(captcha.getBaseURL());
-        for(HttpCookie httpCookie: cookieStore.getCookies()) {
-            logger.fine("Found cookie: " + httpCookie.toString());
-        }
+        CaptchaResult captchaResult = new CaptchaResult(cookieStore.getCookies());
+        foundResult(captcha, captchaResult);
     }
 
 

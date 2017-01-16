@@ -3,14 +3,24 @@ package io.ristretto.decaptcha.captcha;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.net.HttpCookie;
+import java.util.ArrayList;
+import java.util.List;
+
 public class CaptchaResult implements Parcelable{
 
-
-    public CaptchaResult() {
-
-    }
+    private List<String> cookies;
 
     protected CaptchaResult(Parcel in) {
+        cookies = new ArrayList<>();
+        in.readStringList(cookies);
+    }
+
+    public CaptchaResult(List<HttpCookie> cookies) {
+        this.cookies = new ArrayList<>(cookies.size());
+        for(HttpCookie cookie: cookies) {
+            this.cookies.add(cookie.toString());
+        }
     }
 
     @Override
@@ -20,6 +30,7 @@ public class CaptchaResult implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeStringList(cookies);
     }
 
     public static final Creator<CaptchaResult> CREATOR = new Creator<CaptchaResult>() {

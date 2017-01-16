@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import io.ristretto.decaptcha.captcha.Captcha;
 import io.ristretto.decaptcha.captcha.CaptchaChallenge;
+import io.ristretto.decaptcha.captcha.CaptchaResult;
 import io.ristretto.decaptcha.net.Downloader;
 
 
@@ -38,6 +39,9 @@ public abstract class AbstractCaptchaManager<T extends CaptchaChallenge, C exten
         captcha.setChallenge(newChallenge);
     }
 
+    protected void foundResult(C captcha, CaptchaResult result) {
+        captcha.setResult(result);
+    }
 
     @Nullable
     protected abstract T submitAndGetNewTask(C captcha, T task, Object... answers) throws IOException, LoaderException;
