@@ -1,4 +1,4 @@
-package io.ristretto.decaptcha.loader;
+package io.ristretto.decaptcha.manager;
 
 import android.support.annotation.NonNull;
 

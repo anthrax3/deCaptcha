@@ -9,6 +9,7 @@ import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,9 +74,13 @@ public class HttpHeaders extends HashMap<String, String> {
         cookieManager.put(uri, singleToMultiHeaders(this));
     }
 
-    public CookieStore getCookieStore(URI uri) throws IOException {
+    public CookieStore getCookieStore(String uri) throws IOException {
         CookieManager cookieManager = new CookieManager();
-        putCookies(uri, cookieManager);
+        try {
+            putCookies(new URI(uri), cookieManager);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
         return cookieManager.getCookieStore();
     }
 

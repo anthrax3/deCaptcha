@@ -54,7 +54,10 @@ public class CaptchaTileView extends FrameLayout implements Checkable{
 
     private static void setBrightness(ColorMatrix cm, float brightness) {
         float[] array = cm.getArray();
-        array[4] = array[8] = array[16] = brightness * 255;
+        //array[4] = array[8] = array[16] = brightness * 255;
+        for(int i=0; i< array.length; ++i) {
+            array[i] = array[i]*brightness;
+        }
     }
 
     @Override
@@ -69,6 +72,7 @@ public class CaptchaTileView extends FrameLayout implements Checkable{
                 checkedView.setVisibility(VISIBLE);
                 ColorMatrix cm = new ColorMatrix();
                 cm.setSaturation(0.1f);
+                setBrightness(cm, 0.5f);
                 ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
                 imageView.setColorFilter(f);
             } else {

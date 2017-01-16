@@ -1,4 +1,4 @@
-package io.ristretto.decaptcha.solver.ui;
+package io.ristretto.decaptcha.ui;
 
 import android.app.Activity;
 import android.content.Context;
@@ -26,8 +26,7 @@ import java.util.Observer;
 import io.ristretto.decaptcha.captcha.Captcha;
 import io.ristretto.decaptcha.captcha.CaptchaChallenge;
 import io.ristretto.decaptcha.captcha.CaptchaResult;
-import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
-import io.ristretto.decaptcha.loader.CaptchaManager;
+import io.ristretto.decaptcha.manager.CaptchaManager;
 import io.ristretto.decaptcha.net.Connector;
 import io.ristretto.decaptcha.net.Downloader;
 import io.ristretto.decaptcha.net.GracefulDownloader;

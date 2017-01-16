@@ -1,11 +1,10 @@
-package io.ristretto.decaptcha.solver.ui;
+package io.ristretto.decaptcha.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -36,10 +35,9 @@ import java.util.Map;
 
 import io.ristretto.decaptcha.R;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
-import io.ristretto.decaptcha.loader.CaptchaManager;
-import io.ristretto.decaptcha.loader.CloudFlareCaptchaManager;
+import io.ristretto.decaptcha.manager.CaptchaManager;
+import io.ristretto.decaptcha.manager.CloudFlareCaptchaManager;
 import io.ristretto.decaptcha.net.Downloader;
-import io.ristretto.decaptcha.ui.CaptchaTileView;
 
 /**
  * A placeholder fragment containing a simple view.

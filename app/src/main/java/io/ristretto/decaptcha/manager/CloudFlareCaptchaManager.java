@@ -1,4 +1,4 @@
-package io.ristretto.decaptcha.loader;
+package io.ristretto.decaptcha.manager;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,6 +12,7 @@ import org.jsoup.select.Elements;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -25,8 +26,7 @@ import io.ristretto.decaptcha.net.Downloader;
 import io.ristretto.decaptcha.net.HttpHeaders;
 import io.ristretto.decaptcha.net.PostDataBuilder;
 
-import static android.support.v4.app.Fragment.instantiate;
-import static io.ristretto.decaptcha.solver.ui.CloudFlareSolverFragment.LOADING_STEPS;
+import static io.ristretto.decaptcha.ui.CloudFlareSolverFragment.LOADING_STEPS;
 
 
 public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, CloudFlareReCaptcha> {
@@ -260,8 +260,14 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         headers.setCookies(captcha.getBaseCookies());
         Downloader.Result result = downloader.download(url, headers);
         logger.finer("Response: " + result.getStatusCode());
-        Document document = Jsoup.parse(result.getInputStream(), result.getCharset(), url.toString());
-        System.err.println(document.html());
+        if(result.getStatusCode() != HttpURLConnection.HTTP_MOVED_TEMP) {
+            throw new IOException("Got invalid response " + result.getStatusCode());
+        }
+        HttpHeaders httpHeaders = new HttpHeaders(result.getResponseHeaders());
+        CookieStore cookieStore = httpHeaders.getCookieStore(captcha.getBaseURL());
+        for(HttpCookie httpCookie: cookieStore.getCookies()) {
+            logger.fine("Found cookie: " + httpCookie.toString());
+        }
     }
 
 

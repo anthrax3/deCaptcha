@@ -20,8 +20,8 @@ import android.widget.Toast;
 import org.jetbrains.annotations.Contract;
 
 import io.ristretto.decaptcha.captcha.CaptchaResult;
-import io.ristretto.decaptcha.solver.ui.CaptchaSolverFragment;
-import io.ristretto.decaptcha.solver.ui.CloudFlareSolverFragment;
+import io.ristretto.decaptcha.ui.CaptchaSolverFragment;
+import io.ristretto.decaptcha.ui.CloudFlareSolverFragment;
 
 public class SolverActivity extends AppCompatActivity
         implements StartFragment.OnFragmentInteractionListener,
