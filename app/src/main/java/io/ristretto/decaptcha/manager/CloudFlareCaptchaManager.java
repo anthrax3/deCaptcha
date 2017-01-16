@@ -24,6 +24,7 @@ import io.ristretto.decaptcha.captcha.CaptchaResult;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha.Challenge;
 import io.ristretto.decaptcha.net.Downloader;
+import io.ristretto.decaptcha.net.GracefulDownloader;
 import io.ristretto.decaptcha.net.HttpHeaders;
 import io.ristretto.decaptcha.net.PostDataBuilder;
 
@@ -179,6 +180,7 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
     private static File loadPayload(String challengeId, File cacheDir, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
         String payloadUrl = captcha.getPayloadUrl(challengeId);
         HttpHeaders payloadHeaders = new HttpHeaders();
+        payloadHeaders.put(HttpHeaders.HEADER_ACCEPT, GracefulDownloader.ACCEPT_IMAGES);
         payloadHeaders.setReferer(captcha.getIFrameUrl());
         return downloader.download(cacheDir, new URL(payloadUrl), payloadHeaders);
     }

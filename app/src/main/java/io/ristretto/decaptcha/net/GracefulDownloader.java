@@ -41,12 +41,14 @@ public class GracefulDownloader implements Downloader {
     private static final String TAG = "GracefulDownloader";
 
 
-    public static final String HEADER_REFERER = "Referer";
+    private static final String DEFAULT_ACCEPT_HEADER = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+    private static final String DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; rv:45.0) Gecko/20100101 Firefox/45.0";
+    private static final String DEFAULT_LANGUAGE = "en-US,en;q=0.5";
+    private static final String DEFAULT_ACCEPT_ENCODING = "gzip, deflate";
+    public static final String ACCEPT_IMAGES = "image/png,image/*;q=0.8,*/*;q=0.5";
 
-    public static final String DEFAULT_ACCEPT_HEADER = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-    public static final String DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; rv:45.0) Gecko/20100101 Firefox/45.0";
-    public static final String DEFAULT_LANGUAGE = "en-US,en;q=0.5";
-    public static final String DEFAULT_ACCEPT_ENCODING = "gzip, deflate";
+    private static final String METHOD_GET = "GET";
+    private static final String METHOD_POST = "POST";
 
     private final Connector mConnector;
     private final String mUserAgent;
@@ -90,15 +92,15 @@ public class GracefulDownloader implements Downloader {
 
     private void setDefaultHeaders(HttpHeaders headers) {
         putHeaderIfNotExists(headers, HttpHeaders.HEADER_USER_AGENT, mUserAgent);
-        putHeaderIfNotExists(headers, HttpHeaders.ACCEPT, mAcceptHeader);
+        putHeaderIfNotExists(headers, HttpHeaders.HEADER_ACCEPT, mAcceptHeader);
         // TODO: make configurable
-        putHeaderIfNotExists(headers, HttpHeaders.ACCEPT_LANGUAGE, DEFAULT_LANGUAGE);
-        putHeaderIfNotExists(headers, HttpHeaders.ACCEPT_ENCODING, DEFAULT_ACCEPT_ENCODING);
+        putHeaderIfNotExists(headers, HttpHeaders.HEADER_ACCEPT_LANGUAGE, DEFAULT_LANGUAGE);
+        putHeaderIfNotExists(headers, HttpHeaders.HEADER_ACCEPT_ENCODING, DEFAULT_ACCEPT_ENCODING);
     }
 
     private void setDefaultPostHeaders(HttpHeaders headers, byte[] postData) {
-        putHeaderIfNotExists(headers, HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
-        putHeaderIfNotExists(headers, HttpHeaders.CONTENT_LENGTH, Integer.toString(postData.length));
+        putHeaderIfNotExists(headers, HttpHeaders.HEADER_CONTENT_TYPE, "application/x-www-form-urlencoded");
+        putHeaderIfNotExists(headers, HttpHeaders.HEADER_CONTENT_LENGTH, Integer.toString(postData.length));
     }
 
     @Override
@@ -110,7 +112,7 @@ public class GracefulDownloader implements Downloader {
     public Downloader.Result download(URL url, final @Nullable HttpHeaders providedHeaders) throws IOException {
         HttpHeaders httpHeaders = copyOrCreateHeaders(providedHeaders);
         setDefaultHeaders(httpHeaders);
-        HttpURLConnection httpURLConnection = mConnector.connect("GET", url, httpHeaders);
+        HttpURLConnection httpURLConnection = mConnector.connect(METHOD_GET, url, httpHeaders);
         return new Result(httpURLConnection);
     }
 
@@ -119,7 +121,7 @@ public class GracefulDownloader implements Downloader {
         setDefaultHeaders(headers);
         setDefaultPostHeaders(headers, postData);
         Log.d(TAG, "Post data: " + new String(postData));
-        HttpURLConnection httpURLConnection = mConnector.connect("POST", url, headers);
+        HttpURLConnection httpURLConnection = mConnector.connect(METHOD_POST, url, headers);
         OutputStream outputStream = httpURLConnection.getOutputStream();
         outputStream.write(postData);
         return new Result(httpURLConnection);
@@ -167,7 +169,7 @@ public class GracefulDownloader implements Downloader {
             } else {
                 inputStream = httpUrlConnection.getInputStream();
             }
-            if("gzip".equals(httpHeaders.get(HttpHeaders.CONTENT_ENCODING))) {
+            if("gzip".equals(httpHeaders.get(HttpHeaders.HEADER_CONTENT_ENCODING))) {
                 inputStream = addGzipDecodeLayer(inputStream);
             }
             return inputStream;

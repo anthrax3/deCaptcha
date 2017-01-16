@@ -119,6 +119,7 @@ public class SolverActivity extends AppCompatActivity
             fragment = StartFragment.newInstance(defaultUrl, errorMessage);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment, fragment)
+                    .addToBackStack(null)
                     .commit();
         } else {
             Log.d(TAG, "Updating default url: " + defaultUrl);

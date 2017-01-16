@@ -157,17 +157,41 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
 
     private void loadCaptcha(URL url) {
         final C captcha;
-        final T challenge;
         CaptchaManager<T, C> captchaManager = getCaptchaManager();
+        if(captchaManager == null) {
+            throw new IllegalStateException("captchaManager is null");
+        }
         try {
             captcha = captchaManager.loadCaptcha(url);
         } catch (IOException | CaptchaManager.LoaderException e) {
             notifyLoadingFailed(e);
             return;
         }
+        Activity activity = getActivity();
+        if(activity == null) {
+            // Fragment detached
+            return;
+        }
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                updateCaptcha(captcha);
+            }
+        });
+        mWorkHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                loadCaptchaChallenge(captcha);
+            }
+        });
+    }
 
-        setCaptcha(captcha);
-
+    private void loadCaptchaChallenge(final C captcha) {
+        CaptchaManager<T, C> captchaManager = getCaptchaManager();
+        if(captchaManager == null) {
+            throw new IllegalStateException("captchaManager is null");
+        }
+        final T challenge;
         try {
             challenge = captchaManager.loadTask(captcha);
         } catch (CaptchaManager.LoaderException | IOException e) {
@@ -177,7 +201,12 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
         captcha.setSolvedListener(mCaptchaSolvedListener);
         captcha.addTaskObserver(mTaskObserver);
         captcha.setChallenge(challenge);
-        getActivity().runOnUiThread(new Runnable() {
+        Activity activity = getActivity();
+        if(activity == null) {
+            // Fragment has been detached.
+            return;
+        }
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 onCaptchaChallengeLoaded(captcha, challenge);
@@ -220,19 +249,17 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
     }
 
 
-    private void setCaptcha(final C captcha) {
+    private void updateCaptcha(final C captcha) {
         mCaptcha = captcha;
         final Activity activity = getActivity();
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-            if (getView() != null) {
-                onCaptchaLoaded(captcha);
-            } else {
-                pendingCaptcha = captcha;
-            }
-            }
-        });
+        if(activity == null) {
+            return;
+        }
+        if (getView() != null) {
+            onCaptchaLoaded(captcha);
+        } else {
+            pendingCaptcha = captcha;
+        }
     }
 
     @Nullable
