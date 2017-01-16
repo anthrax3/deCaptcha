@@ -1,13 +1,11 @@
 package io.ristretto.decaptcha;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -15,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import org.jetbrains.annotations.Contract;
 
@@ -24,12 +21,15 @@ import io.ristretto.decaptcha.ui.CaptchaSolverFragment;
 import io.ristretto.decaptcha.ui.CloudFlareSolverFragment;
 
 public class SolverActivity extends AppCompatActivity
-        implements StartFragment.OnFragmentInteractionListener,
-                    CaptchaSolverFragment.OnFragmentInteractionListener {
+        implements CaptchaSolverFragment.OnFragmentInteractionListener {
 
     private static final String TAG = "SolverActivity";
-    private Uri startingPoint;
+    public static final String EXTRA_RESULT = "io.ristretto.decaptcha.SolverActivity.extra.EXTRA_RESULT";
+    public static final String EXTRA_ERROR_MESSAGE = "io.ristretto.decaptcha.SolverActivity.extra.EXTRA_ERROR_MESSAGE";
+    public static final String EXTRA_USER_CANCELED = "io.ristretto.decaptcha.SolverActivity.extra.EXTRA_USER_CANCELED";
+    private static final String EXTRA_CAUSE = "io.ristretto.decaptcha.SolverActivity.extra.EXTRA_ERROR_CAUSE";
     private CaptchaLoadingProgressListener mCaptchaLoadingProgressListener;
+    private int mShortAnimTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,27 +38,16 @@ public class SolverActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mCaptchaLoadingProgressListener = new CaptchaLoadingProgressListener();
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(startingPoint != null) {
-                    solveUrl(startingPoint.toString());
-                } else {
-                    Toast.makeText(SolverActivity.this, "Nothing set",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-        showStartFragment("https://4chan.org");
+        mShortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
+    protected void onStart() {
+        super.onStart();
+        Intent intent = getIntent();
         String action = intent.getAction();
         switch (action) {
-            case Intent.ACTION_VIEW:
+            case Intent.ACTION_RUN:
                 solveUrl(intent.getDataString());
                 break;
             default:
@@ -67,83 +56,17 @@ public class SolverActivity extends AppCompatActivity
         }
     }
 
-    private void setFloatingButtonIsVisible(boolean visible) {
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        if(fab == null) {
-            Log.w(TAG, "Fab not found");
-            return;
-        }
-        if(visible) {
-            fab.show();
-        } else {
-            fab.hide();
-        }
-    }
-
-    private void showFAB() {
-        setFloatingButtonIsVisible(true);
-    }
-
-    private void hideFAB() {
-        setFloatingButtonIsVisible(false);
-    }
-
-
-    /**
-     * Get the active fragment if it is of the expected class.
-     * @param expectedClass the expected class.
-     * @param <T> The fragment type
-     * @return the casted fragment
-     */
-    @Nullable
-    @Contract("null -> fail")
-    private <T extends Fragment> T getActiveFragment(Class<T> expectedClass) {
-        if(expectedClass == null) throw new NullPointerException("expectedClass is null");
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment fragment = fragmentManager.findFragmentById(R.id.fragment);
-        if(fragment == null || ! expectedClass.isAssignableFrom(fragment.getClass())) {
-            return null;
-        } else {
-            return expectedClass.cast(fragment);
-        }
-    }
-
-    private void showStartFragment(String defaultUrl) {
-        showStartFragment(defaultUrl, null);
-    }
-
-    private void showStartFragment(String defaultUrl, @Nullable String errorMessage) {
-        Fragment fragment = getActiveFragment(StartFragment.class);
-        if(fragment == null) {
-            Log.d(TAG, "Creating start fragment with default url: " + defaultUrl);
-            fragment = StartFragment.newInstance(defaultUrl, errorMessage);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment, fragment)
-                    .addToBackStack(null)
-                    .commit();
-        } else {
-            Log.d(TAG, "Updating default url: " + defaultUrl);
-            ((StartFragment) fragment).updateDefaultUrl(defaultUrl);
-        }
-    }
-
     @Contract("null -> fail")
     private void solveUrl(final String url) {
         if(url == null) throw new NullPointerException("url is null");
         if(url.isEmpty()) throw new IllegalArgumentException("url is empty");
-        Fragment fragment = getActiveFragment(CaptchaSolverFragment.class);
-        if(fragment == null) {
-            CaptchaSolverFragment captchaSolverFragment;
-            captchaSolverFragment = CaptchaSolverFragment.newInstance(CloudFlareSolverFragment.class, url);
-            captchaSolverFragment.addLoadingProgressListener(mCaptchaLoadingProgressListener);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment, captchaSolverFragment)
-                    .addToBackStack(null)
-                    .commit();
-        }
-        hideFAB();
-    }
+        CaptchaSolverFragment captchaSolverFragment = CaptchaSolverFragment.newInstance(CloudFlareSolverFragment.class, url);
+        captchaSolverFragment.addLoadingProgressListener(mCaptchaLoadingProgressListener);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment, captchaSolverFragment)
+                .commit();
 
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -167,59 +90,82 @@ public class SolverActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-        this.startingPoint = uri;
-        showFAB();
+
+    private Intent getResultIntent(CaptchaResult result) {
+        Intent intent = new Intent();
+        intent.putExtra(EXTRA_RESULT, result);
+        return intent;
+    }
+
+    private Intent getErrorIntent(String message, Throwable throwable) {
+        Intent intent = new Intent();
+        intent.putExtra(EXTRA_USER_CANCELED, false);
+        intent.putExtra(EXTRA_ERROR_MESSAGE, message);
+        intent.putExtra(EXTRA_CAUSE, throwable);
+        return intent;
     }
 
     @Override
     public void onResult(@NonNull CaptchaResult captchaResult) {
+        hideProgressBar();
         Log.d(TAG, "Got result: " + captchaResult);
-        showResultFragment(captchaResult);
-    }
-
-    private void showResultFragment(CaptchaResult captchaResult) {
-        ResultFragment fragment = getActiveFragment(ResultFragment.class);
-        if(fragment == null) {
-            fragment = ResultFragment.newInstance(captchaResult);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment, fragment)
-                    .commit();
-        }else {
-            fragment.updateResult(captchaResult);
-        }
+        setResult(RESULT_OK, getResultIntent(captchaResult));
+        finish();
     }
 
     @Override
     public void onFailure(@NonNull String message, @Nullable Throwable throwable) {
         hideProgressBar();
-        showStartFragment(startingPoint.toString(), message);
+        Log.e(TAG, "Got failure: " + message, throwable);
+        setResult(RESULT_CANCELED, getErrorIntent(message, throwable));
+        finish();
     }
-
 
     private @Nullable ProgressBar getProgressBar() {
         return (ProgressBar) findViewById(R.id.progressBar);
     }
 
     private void hideProgressBar() {
-        ProgressBar progressBar = getProgressBar();
-        if(progressBar != null) {
-            progressBar.setVisibility(View.GONE);
-        }
+        final ProgressBar progressBar = getProgressBar();
+        if(progressBar == null) return;
+        if(progressBar.getVisibility() == View.GONE) return;
+        progressBar.animate()
+                .setDuration(mShortAnimTime)
+                .alpha(0)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                })
+                .start();
     }
+
+    private void showProgressBar() {
+        ProgressBar progressBar = getProgressBar();
+        if(progressBar == null || progressBar.getVisibility() == View.VISIBLE) return;
+        progressBar.setAlpha(0f);
+        progressBar.setVisibility(View.VISIBLE);
+        progressBar.animate()
+                .setDuration(mShortAnimTime)
+                .alpha(1f)
+                .start();
+    }
+
 
     private class CaptchaLoadingProgressListener implements CaptchaSolverFragment.ProgressListener {
         @Override
         public void onIsIndeterminate(@NonNull CaptchaSolverFragment fragment) {
+            showProgressBar();
             ProgressBar progressBar = getProgressBar();
             if(progressBar == null) return;
             progressBar.setIndeterminate(true);
-            progressBar.setVisibility(View.VISIBLE);
+
         }
 
         @Override
         public void onProgress(@NonNull CaptchaSolverFragment fragment, int progress, int max) {
+            showProgressBar();
             ProgressBar progressBar = getProgressBar();
             if(progressBar == null) return;
             progressBar.setMax(max);

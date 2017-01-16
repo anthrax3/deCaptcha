@@ -44,4 +44,11 @@ public class CaptchaResult implements Parcelable{
             return new CaptchaResult[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "CaptchaResult{" +
+                "cookies=" + cookies +
+                '}';
+    }
 }

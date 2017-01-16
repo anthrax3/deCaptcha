@@ -10,4 +10,5 @@
     <string name="tile_selection_required">Please select a captcha tile</string>
     <string name="reload_captcha_failed">Failed to reload the captcha</string>
     <string name="load_captcha_failed">Failed to load captcha</string>
+    <string name="title_activity_start">StartActivity</string>
 </resources>

@@ -52,7 +52,6 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
     private TileAdapter mAdapter;
 
 
-    public static final int LOADING_STEPS = 4;
     private int mShortAnimationDuration;
     private View mCaptchaView;
     private CloudFlareCaptchaManager mCaptchaManager;

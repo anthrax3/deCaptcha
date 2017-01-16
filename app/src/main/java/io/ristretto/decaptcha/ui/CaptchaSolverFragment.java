@@ -58,7 +58,6 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
         void onFailure(@NonNull String message, @Nullable Throwable throwable);
     }
 
-
     /**
      * Factory method to create a CaptchaSolverFragment
      * @param clazz the subclass of CaptchaSolverFragment to use
@@ -109,12 +108,9 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
         mTaskObserver = new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                Log.d(TAG, "New challange: " + arg);
+                if(arg == null) return;
+                Log.d(TAG, "New challenge: " + arg);
                 final T challenge = (T) arg;
-                if(challenge == null) {
-                    Log.w(TAG, "Got challenge == null");
-                    return;
-                }
                 mUIHandler.post(new Runnable() {
                     @Override
                     public void run() {

@@ -28,8 +28,6 @@ import io.ristretto.decaptcha.net.GracefulDownloader;
 import io.ristretto.decaptcha.net.HttpHeaders;
 import io.ristretto.decaptcha.net.PostDataBuilder;
 
-import static io.ristretto.decaptcha.ui.CloudFlareSolverFragment.LOADING_STEPS;
-
 
 public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, CloudFlareReCaptcha> {
 
@@ -43,7 +41,6 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
     private static final String NAME_CHALLENGE_ID = "c";
     private static final String NAME_RESPONSE = "response";
     private static final String NAME_VERIFICATION_TOKEN = "g-recaptcha-response";
-
 
     private static final String REASON_ANOTHER_CHALLENGE = "r";
     private static final String REASON_AUDIO = "a";
@@ -66,8 +63,6 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
 
         Document document = Jsoup.parse(result.getInputStream(), result.getCharset(), url.toString());
         logger.fine(document.html());
-
-        notifyLoadingProgress(1,LOADING_STEPS);
 
         Element form = document.getElementById("challenge-form");
         if(form == null) {
@@ -96,10 +91,6 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         return new CloudFlareReCaptcha(url.toString(), siteKey, stoken, validationPath, cookieList);
     }
 
-    private void notifyLoadingProgress(int progress, int max) {
-        // TODO
-    }
-
     @NonNull
     @Override
     public Challenge loadTask(CloudFlareReCaptcha captcha) throws IOException, LoaderException {
@@ -110,10 +101,7 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         if(result.getStatusCode() != 200) {
             throw new FileNotFoundException("Fallback returned " + result.getStatusCode());
         }
-
         Document document = Jsoup.parse(result.getInputStream(), result.getCharset(), fallbackUrl);
-        notifyLoadingProgress(2,LOADING_STEPS);
-
         return loadTaskFromIFrame(document, captcha);
     }
 
@@ -169,10 +157,8 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         }
         String challengeId = getChallengeId(form);
         File payload = loadPayload(challengeId, getCacheDir(), captcha, getDownloader());
-        notifyLoadingProgress(3,LOADING_STEPS);
         Challenge challenge;
         challenge = new Challenge(challengeId, payload, task, numberOfAnswers, IMAGE_COLUMNS, IMAGE_ROWS);
-        notifyLoadingProgress(4,LOADING_STEPS);
         return challenge;
     }
 
@@ -237,7 +223,6 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         URL url = new URL(captcha.getIFrameUrl());
         Document document = postCaptcha(downloader, url, captcha.getChallenge().getIdentifier(),
                 selectedAnswers, null);
-        logger.finer("Document: " + document);
         String verificationToken = getVerificationToken(document);
         if(verificationToken != null) {
             foundVerificationToken(captcha, verificationToken);
