@@ -26,7 +26,6 @@ public class NetCipherConnector implements Connector {
     public HttpURLConnection connect(String method, URL url, HttpHeaders headers) throws IOException {
         HttpURLConnection httpURLConnection = NetCipher.getHttpURLConnection(url);
         httpURLConnection.setRequestMethod(method);
-        httpURLConnection.setInstanceFollowRedirects(true);
         headers.putHeaders(httpURLConnection);
         httpURLConnection.connect();
         return httpURLConnection;

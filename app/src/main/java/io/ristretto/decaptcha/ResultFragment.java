@@ -17,6 +17,7 @@ public class ResultFragment extends Fragment {
     private static final String ARGS_RESULT = "result";
 
     public ResultFragment() {
+        super();
         // Required empty public constructor
     }
 

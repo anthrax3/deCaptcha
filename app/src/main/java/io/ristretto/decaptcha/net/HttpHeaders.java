@@ -6,6 +6,7 @@ import android.util.Log;
 import java.io.IOException;
 import java.net.CookieManager;
 import java.net.CookieStore;
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -30,6 +31,7 @@ public class HttpHeaders extends HashMap<String, String> {
     public static final String ACCEPT = "Accept";
     public static final String ACCEPT_LANGUAGE = "Accept-Language";
     public static final String ACCEPT_ENCODING = "Accept-Encoding";
+    private static final String HEADER_COOKIE = "Cookie";
 
     public HttpHeaders() {
         super();
@@ -94,5 +96,22 @@ public class HttpHeaders extends HashMap<String, String> {
 
     public void setReferer(URL referer) {
         setReferer(referer.toString());
+    }
+
+    public void setCookies(Iterable<HttpCookie> cookies) {
+        StringBuilder builder = new StringBuilder();
+        for(HttpCookie cookie: cookies) {
+            if(builder.length() > 0) {
+                builder.append(';');
+            }
+            builder.append(cookie.getName())
+                    .append('=')
+                    .append(cookie.getValue());
+        }
+        setCookies(builder.toString());
+    }
+
+    private void setCookies(String cookies) {
+        put(HEADER_COOKIE, cookies);
     }
 }

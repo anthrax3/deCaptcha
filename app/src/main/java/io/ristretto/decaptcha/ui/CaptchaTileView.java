@@ -52,6 +52,11 @@ public class CaptchaTileView extends FrameLayout implements Checkable{
     }
 
 
+    private static void setBrightness(ColorMatrix cm, float brightness) {
+        float[] array = cm.getArray();
+        array[4] = array[8] = array[16] = brightness * 255;
+    }
+
     @Override
     public void setChecked(boolean checked) {
         if (mChecked != checked) {
@@ -59,12 +64,15 @@ public class CaptchaTileView extends FrameLayout implements Checkable{
             refreshDrawableState();
             sendAccessibilityEvent(AccessibilityEventCompat.TYPE_WINDOW_CONTENT_CHANGED);
             ImageView imageView = (ImageView) findViewById(R.id.captcha_tile);
+            View checkedView = findViewById(R.id.checked);
             if(mChecked) {
+                checkedView.setVisibility(VISIBLE);
                 ColorMatrix cm = new ColorMatrix();
                 cm.setSaturation(0.1f);
                 ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
                 imageView.setColorFilter(f);
             } else {
+                checkedView.setVisibility(GONE);
                 imageView.setColorFilter(null);
             }
         }
@@ -94,5 +102,11 @@ public class CaptchaTileView extends FrameLayout implements Checkable{
     public void setImageBitmap(Bitmap imageBitmap) {
         ImageView imageView = (ImageView) findViewById(R.id.captcha_tile);
         imageView.setImageBitmap(imageBitmap);
+    }
+
+    @SuppressWarnings("SuspiciousNameCombination")
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, widthMeasureSpec);
     }
 }

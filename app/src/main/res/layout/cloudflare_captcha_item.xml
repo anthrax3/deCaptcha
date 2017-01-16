@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<io.ristretto.decaptcha.ui.SquaredRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,12 +15,14 @@
         android:layout_height="match_parent"
         android:scaleType="fitXY" />
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:layout_alignParentBottom="true"
-        android:background="@color/imageOverlayBackground">
-    </RelativeLayout>
-</io.ristretto.decaptcha.ui.SquaredRelativeLayout>
+    <ImageView
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_action_check"
+        android:id="@+id/checked"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
+</RelativeLayout>

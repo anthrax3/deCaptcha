@@ -3,20 +3,46 @@ package io.ristretto.decaptcha.captcha;
 import android.support.annotation.NonNull;
 
 import java.io.File;
+import java.net.HttpCookie;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CloudFlareReCaptcha extends AbstractCaptcha<CloudFlareReCaptcha.Challenge>{
 
     private final String baseURL;
     private final String siteKey;
     private final String secureToken;
-    private CloudFlareReCaptcha.Challenge challenge;
+    private final String validationURL;
+    private final List<HttpCookie> baseCookies;
 
-    public CloudFlareReCaptcha(String baseURL, String siteKey, String secureToken) {
+    public CloudFlareReCaptcha(String baseURL, String siteKey, String secureToken, String validationPath, List<HttpCookie> cookieList) {
         super();
         this.baseURL = checkUrl(baseURL);
         this.siteKey = checkSiteKey(siteKey);
         this.secureToken = checkSecureToken(secureToken);
-        this.challenge = null;
+        this.validationURL = getValidationUrlFromPath(baseURL, validationPath);
+        this.baseCookies = new ArrayList<>(cookieList);
+    }
+
+    private static String getValidationUrlFromPath(String baseURL, String validationPath) {
+        URL baseUrl = null;
+        try {
+            baseUrl = new URL(baseURL);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("baseURL not an url", e);
+        }
+        URL validationURL;
+        try {
+            validationURL = new URL(baseUrl.getProtocol(), baseUrl.getHost(), validationPath);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("can't construct url with validationPath", e);
+        }
+        if(validationURL.getQuery() != null) {
+            throw new IllegalArgumentException("validationURL with existing query not implemented");
+        }
+        return validationURL.toString();
     }
 
     private static String checkUrl(String url) {
@@ -51,6 +77,14 @@ public class CloudFlareReCaptcha extends AbstractCaptcha<CloudFlareReCaptcha.Cha
 
     public String getBaseURL() {
         return baseURL;
+    }
+
+    public String getValidationURL() {
+        return validationURL;
+    }
+
+    public List<HttpCookie> getBaseCookies() {
+        return new ArrayList<>(baseCookies);
     }
 
     public static class Challenge implements CaptchaChallenge {

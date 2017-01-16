@@ -245,6 +245,8 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
         if(view == null) {
             return;
         }
+        GridView gridView = (GridView) view.findViewById(R.id.grid_view);
+        gridView.setAdapter(mAdapter); // resets checked state
         TextView textView = (TextView) view.findViewById(R.id.task);
         textView.setText(challenge.getTaskDescription());
         mAdapter.setBitmaps(createChallengeTiles(challenge));

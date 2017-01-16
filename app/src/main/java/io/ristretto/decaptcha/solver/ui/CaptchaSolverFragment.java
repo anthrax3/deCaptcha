@@ -3,6 +3,7 @@ package io.ristretto.decaptcha.solver.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -12,7 +13,6 @@ import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.View;
-import android.widget.ProgressBar;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -20,11 +20,13 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
 import io.ristretto.decaptcha.captcha.Captcha;
 import io.ristretto.decaptcha.captcha.CaptchaChallenge;
 import io.ristretto.decaptcha.captcha.CaptchaResult;
+import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
 import io.ristretto.decaptcha.loader.CaptchaManager;
 import io.ristretto.decaptcha.net.Connector;
 import io.ristretto.decaptcha.net.Downloader;
@@ -42,22 +44,19 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
     private List<WeakReference<ProgressListener>> mLoadingProgressListeners = new LinkedList<>();
 
     private boolean isLoading = false;
-    private Handler mHandler;
+    private Handler mWorkHandler;
     private Handler mUIHandler;
-    private HandlerThread mHandlerThread;
+    private HandlerThread mWorkHandlerThread;
 
-    private boolean viewCreated = false;
     private C pendingCaptcha = null;
     private C mCaptcha;
     private Downloader mDownloader;
     private Captcha.OnSolvedListener<CaptchaResult> mCaptchaSolvedListener;
+    private Observer mTaskObserver;
 
     public interface OnFragmentInteractionListener {
         void onResult(@NonNull CaptchaResult captchaResult);
         void onFailure(@NonNull String message, @Nullable Throwable throwable);
-    }
-
-    protected static class CaptchaNotFoundException extends Exception {
     }
 
 
@@ -70,7 +69,6 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
      */
     public static <T extends CaptchaSolverFragment> T newInstance(Class<T> clazz, String captchaUrl) {
         Bundle bundle = new Bundle();
-        ProgressBar progressBar;
         bundle.putString(KEY_URL, captchaUrl);
         T fragment;
         try {
@@ -84,7 +82,7 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
     }
 
     protected Handler getHandler() {
-        return mHandler;
+        return mWorkHandler;
     }
 
 
@@ -104,11 +102,30 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
         mUIHandler = new Handler();
         notifyLoadingIsIndeterminate();
 
-        mHandlerThread = new HandlerThread(TAG + "Thread");
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
+        mWorkHandlerThread = new HandlerThread(TAG + "Thread");
+        mWorkHandlerThread.start();
+        mWorkHandler = new Handler(mWorkHandlerThread.getLooper());
         Connector mConnector = NetCipherConnector.getInstance();
         mDownloader = new GracefulDownloader(mConnector);
+        mTaskObserver = new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                Log.d(TAG, "New challange: " + arg);
+                final T challenge = (T) arg;
+                if(challenge == null) {
+                    Log.w(TAG, "Got challenge == null");
+                    return;
+                }
+                mUIHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        C captcha = getCaptcha();
+                        if(captcha == null) return;
+                        onCaptchaChallengeLoaded(captcha, challenge);
+                    }
+                });
+            }
+        };
         mCaptchaSolvedListener = new Captcha.OnSolvedListener<CaptchaResult>() {
             @Override
             public void onCaptchaSolved(final Captcha captcha, final CaptchaResult result) {
@@ -129,7 +146,7 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
         if(uri != null) {
             // TODO
             final URL url = UriHelper.uriToURL(uri, UriHelper.PROTOCOLS_HTTP_AND_HTTPS);
-            mHandler.post(new Runnable() {
+            mWorkHandler.post(new Runnable() {
                 @Override
                 public void run() {
                 loadCaptcha(url);
@@ -159,6 +176,7 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
             return;
         }
         captcha.setSolvedListener(mCaptchaSolvedListener);
+        captcha.addTaskObserver(mTaskObserver);
         captcha.setChallenge(challenge);
         getActivity().runOnUiThread(new Runnable() {
             @Override
@@ -179,7 +197,6 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewCreated = true;
         final C captcha = pendingCaptcha;
         pendingCaptcha = null;
         if(captcha != null) {
@@ -196,7 +213,11 @@ public abstract class CaptchaSolverFragment<T extends CaptchaChallenge, C extend
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        viewCreated = false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            mWorkHandlerThread.quitSafely();
+        } else {
+            mWorkHandlerThread.quit();
+        }
     }
 
 

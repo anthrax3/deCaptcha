@@ -12,8 +12,11 @@ import org.jsoup.select.Elements;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
@@ -22,12 +25,14 @@ import io.ristretto.decaptcha.net.Downloader;
 import io.ristretto.decaptcha.net.HttpHeaders;
 import io.ristretto.decaptcha.net.PostDataBuilder;
 
+import static android.support.v4.app.Fragment.instantiate;
 import static io.ristretto.decaptcha.solver.ui.CloudFlareSolverFragment.LOADING_STEPS;
 
 
 public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, CloudFlareReCaptcha> {
 
-    private static final Logger logger = Logger.getLogger("CloudFlareCaptchaManager");
+    public static final int EXPECTED_TOKEN_LENGTH = 420;
+    private final Logger logger;
 
     private static final int IMAGE_COLUMNS = 3;
     private static final int IMAGE_ROWS = 3;
@@ -35,12 +40,17 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
     private static final String NAME_REASON="reason";
     private static final String NAME_CHALLENGE_ID = "c";
     private static final String NAME_RESPONSE = "response";
+    private static final String NAME_VERIFICATION_TOKEN = "g-recaptcha-response";
+
 
     private static final String REASON_ANOTHER_CHALLENGE = "r";
     private static final String REASON_AUDIO = "a";
 
     public CloudFlareCaptchaManager(Downloader downloader, File cacheDir) {
         super(downloader, cacheDir);
+        logger = Logger.getLogger("CloudFlareCaptchaManager");
+        logger.setLevel(Level.FINEST);
+
     }
 
     @NonNull
@@ -50,15 +60,21 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         Downloader downloader = getDownloader();
         Downloader.Result result = downloader.download(url);
 
+        List<HttpCookie> cookieList = result.getCookies();
 
         Document document = Jsoup.parse(result.getInputStream(), result.getCharset(), url.toString());
         logger.fine(document.html());
 
         notifyLoadingProgress(1,LOADING_STEPS);
 
-        Elements captchaContainers = document.getElementsByAttribute("data-stoken");
-        String siteKey = null;
+        Element form = document.getElementById("challenge-form");
+        if(form == null) {
+            throw new LoaderException("Challenge form not found", document.html());
+        }
+        String validationPath = form.attr("action");
+        Elements captchaContainers = form.getElementsByAttribute("data-stoken");
         String stoken = null;
+        String siteKey = null;
         if (!captchaContainers.isEmpty()) {
             for (Element element : captchaContainers) {
                 siteKey = element.attr("data-sitekey");
@@ -75,7 +91,7 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
             throw new IOException("stoken = null");
         }
 
-        return new CloudFlareReCaptcha(url.toString(), siteKey, stoken);
+        return new CloudFlareReCaptcha(url.toString(), siteKey, stoken, validationPath, cookieList);
     }
 
     private void notifyLoadingProgress(int progress, int max) {
@@ -101,13 +117,13 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
 
     @Nullable
     @Override
-    public Challenge submitTask(CloudFlareReCaptcha captcha, Challenge task, Object... answers) throws IOException, LoaderException {
-        return submitTask(captcha, (long[]) answers[0]);
+    public Challenge submitAndGetNewTask(CloudFlareReCaptcha captcha, Challenge task, Object... answers) throws IOException, LoaderException {
+        return  submitTask(captcha, (long[]) answers[0]);
     }
 
 
     @Nullable
-    private String getVerficationToken(Document document) {
+    private String getVerificationToken(Document document) {
         Element element = document.getElementsByClass("fbc-verification-token").first();
         if(element == null) {
             return null;
@@ -202,9 +218,9 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         Document document = postCaptcha(downloader, url, captcha.getChallenge().getIdentifier(),
                 null, reason);
         logger.warning("Document: " + document);
-        String verificationToken = getVerficationToken(document);
+        String verificationToken = getVerificationToken(document);
         if(verificationToken != null) {
-            logger.finer("Got verification token: " + verificationToken);
+            foundVerificationToken(captcha, verificationToken);
         } else {
             loadTaskFromIFrame(document, captcha);
         }
@@ -219,18 +235,33 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         Document document = postCaptcha(downloader, url, captcha.getChallenge().getIdentifier(),
                 selectedAnswers, null);
         logger.finer("Document: " + document);
-        String verificationToken = getVerficationToken(document);
+        String verificationToken = getVerificationToken(document);
         if(verificationToken != null) {
-            foundVerificationToken(verificationToken);
+            foundVerificationToken(captcha, verificationToken);
             return null;
         } else {
             return loadTaskFromIFrame(document, captcha);
         }
     }
 
-    private void foundVerificationToken(String verificationToken) {
+    private void foundVerificationToken(CloudFlareReCaptcha captcha, String verificationToken) throws IOException {
         logger.finer("Got verification token: " + verificationToken);
-        // TODO
+        if(verificationToken.length() != EXPECTED_TOKEN_LENGTH) {
+            logger.warning("Expected length of token to be " + EXPECTED_TOKEN_LENGTH + " but got " + verificationToken.length());
+        }
+        Downloader downloader = getDownloader();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setReferer(captcha.getBaseURL());
+        PostDataBuilder dataBuilder = new PostDataBuilder();
+        dataBuilder.add(NAME_VERIFICATION_TOKEN, verificationToken);
+        // TODO: Make this always working
+        URL url = new URL(captcha.getValidationURL() + "?" + dataBuilder.toString());
+        System.err.println(url.toString());
+        headers.setCookies(captcha.getBaseCookies());
+        Downloader.Result result = downloader.download(url, headers);
+        logger.finer("Response: " + result.getStatusCode());
+        Document document = Jsoup.parse(result.getInputStream(), result.getCharset(), url.toString());
+        System.err.println(document.html());
     }
 
 
