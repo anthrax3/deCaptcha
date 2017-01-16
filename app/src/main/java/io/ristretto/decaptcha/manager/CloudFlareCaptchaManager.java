@@ -32,7 +32,7 @@ import static io.ristretto.decaptcha.ui.CloudFlareSolverFragment.LOADING_STEPS;
 
 public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, CloudFlareReCaptcha> {
 
-    public static final int EXPECTED_TOKEN_LENGTH = 420;
+    private static final int EXPECTED_TOKEN_LENGTH = 420;
     private final Logger logger;
 
     private static final int IMAGE_COLUMNS = 3;

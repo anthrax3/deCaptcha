@@ -74,7 +74,7 @@ public abstract class AbstractCaptcha<T extends CaptchaChallenge> implements Cap
 
 
     private static class TaskObservable<T> extends Observable {
-        T mTask = null;
+        private T mTask = null;
 
         @Override
         public void notifyObservers() {
