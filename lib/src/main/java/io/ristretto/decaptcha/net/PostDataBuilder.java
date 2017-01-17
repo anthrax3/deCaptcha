@@ -1,8 +1,7 @@
 package io.ristretto.decaptcha.net;
 
-import android.support.annotation.NonNull;
-
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -20,19 +19,17 @@ public class PostDataBuilder {
         }
     }
 
-    @NonNull
     @Contract("null, _ -> fail")
     public PostDataBuilder add(String name, int value) {
         return add(name, Integer.toString(value));
     }
 
-    @NonNull
     @Contract("null, _ -> fail")
     public PostDataBuilder add(String name, long value) {
         return add(name, Long.toString(value));
     }
 
-    @NonNull
+    @Contract("null, _ -> fail; _, null -> fail; !null, !null -> !null")
     public PostDataBuilder add(String name, String value) {
         if(name == null) throw new NullPointerException("name is null");
         if(name.isEmpty()) throw new IllegalArgumentException("name is empty");
@@ -48,7 +45,7 @@ public class PostDataBuilder {
         return this;
     }
 
-    @NonNull
+    @Contract("null, _ -> fail; _, null -> fail; !null, !null -> !null")
     public PostDataBuilder addIntegers(String name, Iterable<Integer> values) {
         if(name == null) throw new NullPointerException("name is null");
         if(values == null) throw new NullPointerException("values is null");
@@ -58,23 +55,27 @@ public class PostDataBuilder {
         return this;
     }
 
-    @NonNull
+    @Contract("null, _ -> fail; _, null -> fail; !null, !null -> !null")
     public PostDataBuilder add(String name, int[] values) {
+        if(name == null) throw new NullPointerException("name is null");
+        if(values == null) throw new NullPointerException("values is null");
         for(int value: values) {
             add(name, value);
         }
         return this;
     }
 
-    @NonNull
+    @Contract("null, _ -> fail; _, null -> fail; !null, !null -> !null")
     public PostDataBuilder add(String name, long[] values) {
+        if(name == null) throw new NullPointerException("name is null");
+        if(values == null) throw new NullPointerException("values is null");
         for(long value: values) {
             add(name, value);
         }
         return this;
     }
 
-    @NonNull
+    @Contract("null, _ -> fail; _, null -> fail; !null, !null -> !null")
     public PostDataBuilder add(String name, Iterable<String> values) {
         if(name == null) throw new NullPointerException("name is null");
         if(values == null) throw new NullPointerException("values is null");
@@ -84,13 +85,13 @@ public class PostDataBuilder {
         return this;
     }
 
-    @NonNull
     @Override
+    @NotNull
     public String toString() {
         return stringBuilder.toString();
     }
 
-    @NonNull
+    @NotNull
     public byte[] getBytes() {
         try {
             return stringBuilder.toString().getBytes("UTF-8");

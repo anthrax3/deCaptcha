@@ -1,6 +1,6 @@
 package io.ristretto.decaptcha.manager;
 
-import android.support.annotation.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URL;
@@ -29,10 +29,10 @@ public interface CaptchaManager<T extends CaptchaChallenge, C extends Captcha<T>
         }
     }
 
-    @NonNull
+    @NotNull
     C loadCaptcha(URL url) throws IOException, LoaderException;
 
-    @NonNull
+    @NotNull
     T loadTask(C captcha) throws IOException, LoaderException;
 
 }

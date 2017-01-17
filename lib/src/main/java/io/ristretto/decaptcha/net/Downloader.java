@@ -1,8 +1,5 @@
 package io.ristretto.decaptcha.net;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,19 +13,14 @@ public interface Downloader {
     interface Result {
         int getStatusCode() throws IOException;
 
-        @NonNull
         Map<String, String> getResponseHeaders() throws IOException;
 
-        @NonNull
         InputStream getInputStream() throws IOException;
 
-        @Nullable
         String getCharset() throws IOException;
 
-        @Nullable
         String getContentType();
 
-        @NonNull
         List<HttpCookie> getCookies() throws IOException;
 
         void close();

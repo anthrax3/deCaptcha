@@ -26,6 +26,7 @@ import java.util.Observer;
 import io.ristretto.decaptcha.captcha.Captcha;
 import io.ristretto.decaptcha.captcha.CaptchaChallenge;
 import io.ristretto.decaptcha.captcha.CaptchaResult;
+import io.ristretto.decaptcha.captcha.ParcableCaptchaResult;
 import io.ristretto.decaptcha.manager.CaptchaManager;
 import io.ristretto.decaptcha.net.Connector;
 import io.ristretto.decaptcha.net.Downloader;

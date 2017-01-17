@@ -11,7 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import io.ristretto.decaptcha.captcha.CaptchaResult;
+import io.ristretto.decaptcha.captcha.ParcableCaptchaResult;
 
 public class StartActivity extends AppCompatActivity
     implements StartFragment.OnFragmentInteractionListener{
@@ -22,7 +22,7 @@ public class StartActivity extends AppCompatActivity
     private static final String KEY_URL = "URL";
 
     private Uri startingPoint;
-    private CaptchaResult captchaResult;
+    private ParcableCaptchaResult captchaResult;
 
     @Override
     public void onURLChanged(Uri uri) {
@@ -44,7 +44,7 @@ public class StartActivity extends AppCompatActivity
         }
     }
 
-    private void showResultFragment(CaptchaResult captchaResult) {
+    private void showResultFragment(ParcableCaptchaResult captchaResult) {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment);
         if(fragment instanceof ResultFragment){
             ((ResultFragment) fragment).updateResult(captchaResult);
@@ -127,7 +127,7 @@ public class StartActivity extends AppCompatActivity
 
     private void handleSolveResult(int resultCode, Intent data) {
         if(resultCode == RESULT_OK) {
-            CaptchaResult result = data.getParcelableExtra(SolverActivity.EXTRA_RESULT);
+            ParcableCaptchaResult result = data.getParcelableExtra(SolverActivity.EXTRA_RESULT);
             Log.d(TAG, "Got result! :) " + result);
             showResultFragment(result);
         } else if (resultCode == RESULT_CANCELED) {

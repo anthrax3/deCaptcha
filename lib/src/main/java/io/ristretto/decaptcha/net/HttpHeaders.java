@@ -1,8 +1,5 @@
 package io.ristretto.decaptcha.net;
 
-
-import android.util.Log;
-
 import java.io.IOException;
 import java.net.CookieManager;
 import java.net.CookieStore;
@@ -46,7 +43,7 @@ public class HttpHeaders extends TreeMap<String, String> {
             List<String> values = entry.getValue();
             if(values.size() > 1) {
                 // TODO: throw?
-                Log.w(TAG, "Ignoring additional values for header " + entry.getKey()  + ": " + Arrays.toString(values.toArray()));
+                //Log.w(TAG, "Ignoring additional values for header " + entry.getKey()  + ": " + Arrays.toString(values.toArray()));
             }
             headers.put(entry.getKey(), entry.getValue().get(0));
         }
@@ -55,7 +52,7 @@ public class HttpHeaders extends TreeMap<String, String> {
 
     private static Map<String, List<String>> singleToMultiHeaders(Map<String, String> single) {
         HashMap<String, List<String>> multi = new HashMap<>(single.size());
-        for(Entry<String, String> entry: single.entrySet()) {
+        for(Map.Entry<String, String> entry: single.entrySet()) {
             List<String> values = new ArrayList<>(1);
             values.add(entry.getValue());
             multi.put(entry.getKey(), values);

@@ -4,6 +4,12 @@ buildscript {
     repositories {
         jcenter()
     }
+
+    /**
+     * The dependencies block configures the dependencies Gradle needs to use
+     * to build your project. The following line adds Android plugin for Gradle
+     * version 2.2.3 as a classpath dependency.
+     */
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.3'
 

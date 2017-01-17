@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import io.ristretto.decaptcha.captcha.CaptchaResult;
+import io.ristretto.decaptcha.captcha.ParcableCaptchaResult;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -22,7 +22,7 @@ public class ResultFragment extends Fragment {
     }
 
 
-    public static ResultFragment newInstance(CaptchaResult captchaResult) {
+    public static ResultFragment newInstance(ParcableCaptchaResult captchaResult) {
         Bundle bundle = new Bundle();
         bundle.putParcelable(ARGS_RESULT, captchaResult);
         ResultFragment fragment = new ResultFragment();
@@ -37,7 +37,7 @@ public class ResultFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_result, container, false);
     }
 
-    public void updateResult(CaptchaResult captchaResult) {
+    public void updateResult(ParcableCaptchaResult captchaResult) {
         // Does nothing yet
     }
 }

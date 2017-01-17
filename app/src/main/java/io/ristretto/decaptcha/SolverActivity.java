@@ -17,6 +17,7 @@ import android.widget.ProgressBar;
 import org.jetbrains.annotations.Contract;
 
 import io.ristretto.decaptcha.captcha.CaptchaResult;
+import io.ristretto.decaptcha.captcha.ParcableCaptchaResult;
 import io.ristretto.decaptcha.ui.CaptchaSolverFragment;
 import io.ristretto.decaptcha.ui.CloudFlareSolverFragment;
 
@@ -93,7 +94,7 @@ public class SolverActivity extends AppCompatActivity
 
     private Intent getResultIntent(CaptchaResult result) {
         Intent intent = new Intent();
-        intent.putExtra(EXTRA_RESULT, result);
+        intent.putExtra(EXTRA_RESULT, new ParcableCaptchaResult(result));
         return intent;
     }
 

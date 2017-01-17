@@ -1,6 +1,7 @@
 package io.ristretto.decaptcha.manager;
 
-import android.support.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +40,7 @@ public abstract class AbstractCaptchaManager<T extends CaptchaChallenge, C exten
         captcha.setChallenge(newChallenge);
     }
 
-    protected void foundResult(C captcha, CaptchaResult result) {
+    protected void foundResult(Captcha<T> captcha, CaptchaResult result) {
         captcha.setResult(result);
     }
 

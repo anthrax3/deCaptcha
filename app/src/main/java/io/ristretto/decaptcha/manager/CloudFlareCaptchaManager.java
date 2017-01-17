@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.ristretto.decaptcha.captcha.CaptchaResult;
+import io.ristretto.decaptcha.captcha.ParcableCaptchaResult;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha.Challenge;
 import io.ristretto.decaptcha.net.Downloader;
@@ -108,10 +110,9 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         return loadTaskFromIFrame(document, captcha);
     }
 
-    @Nullable
     @Override
     public Challenge submitAndGetNewTask(CloudFlareReCaptcha captcha, Challenge task, Object... answers) throws IOException, LoaderException {
-        return  submitTask(captcha, (long[]) answers[0]);
+        return submitTask(captcha, (long[]) answers[0]);
     }
 
 
@@ -256,7 +257,8 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         }
         HttpHeaders httpHeaders = new HttpHeaders(result.getResponseHeaders());
         CookieStore cookieStore = httpHeaders.getCookieStore(captcha.getBaseURL());
-        CaptchaResult captchaResult = new CaptchaResult(cookieStore.getCookies());
+        CaptchaResult captchaResult = new CaptchaResult();
+        captchaResult.setCookiesFromHttpCookies(cookieStore.getCookies());
         foundResult(captcha, captchaResult);
     }
 
