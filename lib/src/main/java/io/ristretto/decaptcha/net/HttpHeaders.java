@@ -26,7 +26,9 @@ public class HttpHeaders extends TreeMap<String, String> {
     public static final String HEADER_ACCEPT = "Accept";
     public static final String HEADER_ACCEPT_LANGUAGE = "Accept-Language";
     public static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
-    private static final String HEADER_COOKIE = "Cookie";
+    public static final String HEADER_COOKIE = "Cookie";
+    public static final String ACCEPT_IMAGES = "image/png,image/*;q=0.8,*/*;q=0.5";
+
 
     public HttpHeaders() {
         super();

@@ -1,6 +1,5 @@
 package io.ristretto.decaptcha.captcha;
 
-import android.support.annotation.NonNull;
 
 import java.io.File;
 import java.net.HttpCookie;
@@ -66,7 +65,6 @@ public class CloudFlareReCaptcha extends AbstractCaptcha<CloudFlareReCaptcha.Cha
         return secureToken;
     }
 
-    @NonNull
     public String getIFrameUrl() {
         return "https://www.google.com/recaptcha/api/fallback?k=" + siteKey + "&stoken=" + secureToken;
     }

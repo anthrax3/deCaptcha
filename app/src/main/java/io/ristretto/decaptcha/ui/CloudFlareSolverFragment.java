@@ -23,9 +23,6 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -179,25 +176,6 @@ public class CloudFlareSolverFragment extends CaptchaSolverFragment<CloudFlareRe
                 .alpha(1f)
                 .setDuration(mShortAnimationDuration)
                 .setListener(null);
-    }
-
-    private static void logResult(Downloader.Result result) {
-        Document document = null;
-        try {
-            document = Jsoup.parse(result.getInputStream(), result.getCharset(), "www.google.com");
-        } catch (IOException e) {
-            Log.e(TAG, "Unable to get input stream", e);
-        }
-        if(document != null) {
-            Log.w(TAG, document.html());
-        }
-        try {
-            for(Map.Entry<String, String> header: result.getResponseHeaders().entrySet()) {
-                Log.d(TAG, "Header: " + header.getKey() + "=" + header.getValue());
-            }
-        } catch (IOException e) {
-            Log.w(TAG, "Unable to get headers", e);
-        }
     }
 
     @NonNull

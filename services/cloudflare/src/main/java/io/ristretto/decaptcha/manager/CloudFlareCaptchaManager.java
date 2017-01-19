@@ -1,8 +1,5 @@
 package io.ristretto.decaptcha.manager;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
@@ -22,11 +19,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.ristretto.decaptcha.captcha.CaptchaResult;
-import io.ristretto.decaptcha.captcha.ParcableCaptchaResult;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha;
 import io.ristretto.decaptcha.captcha.CloudFlareReCaptcha.Challenge;
 import io.ristretto.decaptcha.net.Downloader;
-import io.ristretto.decaptcha.net.GracefulDownloader;
 import io.ristretto.decaptcha.net.HttpHeaders;
 import io.ristretto.decaptcha.net.PostDataBuilder;
 
@@ -57,7 +52,7 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
 
     }
 
-    @NonNull
+    @NotNull
     @Override
     public CloudFlareReCaptcha loadCaptcha(URL url) throws IOException, LoaderException {
 
@@ -96,7 +91,7 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         return new CloudFlareReCaptcha(url.toString(), siteKey, stoken, validationPath, cookieList);
     }
 
-    @NonNull
+    @NotNull
     @Override
     public Challenge loadTask(CloudFlareReCaptcha captcha) throws IOException, LoaderException {
         String fallbackUrl = captcha.getIFrameUrl();
@@ -116,7 +111,6 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
     }
 
 
-    @Nullable
     private String getVerificationToken(Document document) {
         Element element = document.getElementsByClass("fbc-verification-token").first();
         if(element == null) {
@@ -133,8 +127,6 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         return form.getElementsByAttributeValue("name", NAME_CHALLENGE_ID).first().val();
     }
 
-
-    @NonNull
     private Challenge loadTaskFromIFrame(Document iframe, CloudFlareReCaptcha captcha) throws IOException, LoaderException {
         Element label = iframe.select("label[for=" + NAME_RESPONSE + "]").first();
         if(label == null) {
@@ -166,25 +158,23 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         return challenge;
     }
 
-    @NonNull
     private static File loadPayload(String challengeId, File cacheDir, CloudFlareReCaptcha captcha, Downloader downloader) throws IOException {
         String payloadUrl = captcha.getPayloadUrl(challengeId);
         HttpHeaders payloadHeaders = new HttpHeaders();
-        payloadHeaders.put(HttpHeaders.HEADER_ACCEPT, GracefulDownloader.ACCEPT_IMAGES);
+        payloadHeaders.put(HttpHeaders.HEADER_ACCEPT, HttpHeaders.ACCEPT_IMAGES);
         payloadHeaders.setReferer(captcha.getIFrameUrl());
         return downloader.download(cacheDir, new URL(payloadUrl), payloadHeaders);
     }
 
 
-    @NonNull
     @Contract("null, _, _, _, _ -> fail;" +
             "_, null, _, _, _ -> fail;" +
             "_, _, null, _, _ -> fail")
     private static Document postCaptcha(Downloader downloader,
                                         URL iframeURL,
                                         String challengeId,
-                                        @Nullable long[] answers,
-                                        @Nullable String reason) throws IOException {
+                                        long[] answers,
+                                        String reason) throws IOException {
         if(downloader == null) throw new NullPointerException("downlaoder is null");
         if(iframeURL == null) throw new NullPointerException("iframeURL is null");
         if(challengeId == null) throw new NullPointerException("challengeId  is null");
@@ -219,8 +209,6 @@ public class CloudFlareCaptchaManager extends AbstractCaptchaManager<Challenge, 
         }
     }
 
-
-    @Nullable
     private Challenge submitTask(final CloudFlareReCaptcha captcha, long[] selectedAnswers) throws IOException, LoaderException {
         logger.finer("Submitting captcha");
         Downloader downloader = getDownloader();
